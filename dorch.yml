@@ -1,0 +1,21 @@
+# Global vars
+# passed into playbook run as extra vars
+vars:
+  var1: val1
+
+blah: {}
+steps:
+  step1:
+    run: playbook1.yml
+    vars:
+      var2: val2
+  step2:
+    after:
+      - step1
+    run: playbook2.yml
+  step3:
+    after:
+      - step1
+    run: playbook3.yml
+    if:
+      - step1 is failed

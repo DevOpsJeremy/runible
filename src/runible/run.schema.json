@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {
+    "vars": {"type": "object"},
+    "steps": {"type": "object"}
+  },
+  "additionalProperties": false
+}
