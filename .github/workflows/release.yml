@@ -55,7 +55,7 @@ jobs:
       - uses: softprops/action-gh-release@v2.5.0
         with:
           body: |
-            See [the release](https://pypi.org/project/pycli-template/${{ env.VERSION }}) on PyPI.
+            See [the release](https://pypi.org/project/runible/${{ env.VERSION }}) on PyPI.
           files: dist/*
           generate_release_notes: true
           make_latest: true
@@ -65,4 +65,4 @@ jobs:
     needs: [publish]
     runs-on: ubuntu-latest
     steps:
-      - run: pip install pycli-template==$VERSION
+      - run: pip install runible==$VERSION

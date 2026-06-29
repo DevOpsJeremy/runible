@@ -50,3 +50,8 @@ include = ["runible", "/requirements.txt"]
 
 [tool.hatch.metadata.hooks.requirements_txt]
 filename = "requirements.txt"
+
+[tool.pytest]
+strict = true
+addopts = ["--junit-xml", "pytest.junit.xml"]
+junit_suite_name = "runible"
