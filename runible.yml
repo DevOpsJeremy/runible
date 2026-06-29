@@ -17,4 +17,4 @@ steps:
       - step1
     run: playbook3.yml
     when:
-      blah: '- step1 is failed'
+      - step1 is failed
