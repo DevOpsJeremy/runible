@@ -1,0 +1,51 @@
+name: Test package
+run-name: 'Running tests: ${{ github.event.commits[0].message }}'
+on:
+  push:
+    branches-ignore:
+      - main
+    paths: &workflow_paths
+      - src/**
+      - pyproject.toml
+      - requirements.txt
+  pull_request:
+    paths: *workflow_paths
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Test the project
+        run: make test
+      - name: Publish report
+        uses: mikepenz/action-junit-report@v6.0.1
+        with:
+          report_paths: '*junit.xml'
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Lint the project
+        run: make lint
+
+  install:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Install local package
+        run: make install
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Build package
+        run: make build

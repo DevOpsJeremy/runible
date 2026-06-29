@@ -1,0 +1,57 @@
+[build-system]
+requires = [
+  "hatchling >= 1.26",
+  "hatch-requirements-txt >= 0.4.1"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "runible"
+description = "Ansible flow orchestrator"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+readme = "README.md"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+authors = [
+  {name = "Jeremy Watkins", email = "DevOpsJeremy@gmail.com"}
+]
+maintainers = [
+  {name = "Jeremy Watkins", email = "DevOpsJeremy@gmail.com"}
+]
+
+dynamic = [
+  "dependencies",
+  "version"
+]
+
+[project.urls]
+Repository = "https://github.com/DevOpsJeremy/runible"
+Issues = "https://github.com/DevOpsJeremy/runible/issues"
+Changelog = "https://github.com/DevOpsJeremy/runible/blob/main/CHANGELOG.md"
+
+[project.scripts]
+runible = "runible.cli:runible"
+
+[tool.hatch.version]
+path = "src/runible/__init__.py"
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.build.targets.wheel]
+include = ["runible"]
+
+[tool.hatch.build.targets.sdist]
+include = ["runible", "/requirements.txt"]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+filename = "requirements.txt"
+
+[tool.pytest]
+strict = true
+addopts = ["--junit-xml", "pytest.junit.xml"]
+junit_suite_name = "runible"

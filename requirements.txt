@@ -1,0 +1,4 @@
+click==8.4.2
+PyYAML==6.0.3
+jsonschema==4.26.0
+networkx==3.6.1

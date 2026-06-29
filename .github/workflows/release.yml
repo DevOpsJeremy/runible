@@ -1,0 +1,68 @@
+name: Release
+run-name: Release ${{ github.ref_name }}
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+env:
+  VERSION: ${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Build the package
+        run: make build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          path: dist
+
+  publish:
+    name: Publish to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read  # Needed for checkout
+      id-token: write  # Needed for PyPI trusted publishing
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: dist
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  release:
+    name: Create release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: dist
+      - uses: softprops/action-gh-release@v2.5.0
+        with:
+          body: |
+            See [the release](https://pypi.org/project/runible/${{ env.VERSION }}) on PyPI.
+          files: dist/*
+          generate_release_notes: true
+          make_latest: true
+
+  install:
+    name: Install new package from PyPI
+    needs: [publish]
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install runible==$VERSION

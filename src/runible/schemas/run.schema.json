@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "vars": {"type": "object"},
+    "steps": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "run": {"type": "string"},
+            "vars": {"type": "object"},
+            "after": {
+              "anyOf": [
+                {"type": "string"},
+                {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              ]
+            },
+            "when": {
+              "anyOf": [
+                {"type": "string"},
+                {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              ]
+            }
+          },
+          "required": ["run"],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "required": ["steps"],
+  "additionalProperties": false
+}
