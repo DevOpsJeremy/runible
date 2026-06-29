@@ -48,7 +48,6 @@ class Workflow:
     def build(self):
         graph = nx.DiGraph()
 
-        workflow_vars = self.config.get("vars", {})
         for step_name, step in self.config["steps"].items():
             graph.add_node(
                 step_name,
