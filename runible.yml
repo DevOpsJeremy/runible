@@ -3,7 +3,6 @@
 vars:
   var1: val1
 
-blah: {}
 steps:
   step1:
     run: playbook1.yml
@@ -17,5 +16,5 @@ steps:
     after:
       - step1
     run: playbook3.yml
-    if:
-      - step1 is failed
+    when:
+      blah: '- step1 is failed'
