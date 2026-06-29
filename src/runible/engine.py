@@ -29,7 +29,7 @@ class Run:
         try:
             jsonschema.validate(instance=config, schema=cls.SCHEMA)
         except jsonschema.exceptions.ValidationError as E:
-            msg = f"{E.message} (at {E.json_path.removeprefix("$.")})"
+            msg = f"{E.message} (at {E.json_path.removeprefix('$.')})"
             raise click.UsageError(msg)
 
     def build_workflow(self):
@@ -38,6 +38,7 @@ class Run:
     def run(self):
         print(self.workflow.graph.nodes(data=True))
         print([i for i in dir(self.workflow.graph) if not i.startswith("_")])
+
 
 class Workflow:
     def __init__(self, config: dict):
