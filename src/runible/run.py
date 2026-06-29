@@ -4,6 +4,7 @@ import yaml
 import jsonschema
 from pathlib import Path
 
+
 class Run:
     """
     Builds a run instance
