@@ -1,5 +1,5 @@
 import click
-from runible.run import Run
+from .engine import Run
 
 
 @click.command(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
