@@ -4,6 +4,7 @@ import yaml
 import jsonschema
 from pathlib import Path
 import networkx as nx
+from .utilities import as_list
 
 
 class Run:
@@ -28,9 +29,10 @@ class Run:
     def validate_config(cls, config):
         try:
             jsonschema.validate(instance=config, schema=cls.SCHEMA)
-        except jsonschema.exceptions.ValidationError as E:
-            msg = f"{E.message} (at {E.json_path.removeprefix('$.')})"
-            raise click.UsageError(msg)
+        except jsonschema.exceptions.ValidationError as e:
+            path = e.json_path.removeprefix("$.")
+            msg = f"{e.message} (at {path})" if path else e.message
+            raise click.UsageError(msg) from e
 
     def build_workflow(self):
         return Workflow(self.config)
@@ -57,7 +59,7 @@ class Workflow:
             )
 
         for step_name, step in self.config["steps"].items():
-            for dependency in step.get("after", []):
+            for dependency in as_list(step.get("after", [])):
                 if dependency not in graph:
                     raise ValueError(
                         f"Unknown step '{dependency}' referenced by '{step_name}'"

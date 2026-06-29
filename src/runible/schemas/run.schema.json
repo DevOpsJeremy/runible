@@ -29,11 +29,12 @@
               ]
             }
           },
-          "required": ["run"]
-        },
-        "additionalProperties": false
+          "required": ["run"],
+          "additionalProperties": false
+        }
       }
     }
   },
+  "required": ["steps"],
   "additionalProperties": false
 }
