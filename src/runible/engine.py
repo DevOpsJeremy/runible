@@ -47,6 +47,37 @@ class Workflow:
         self.config = config
         self.graph = self.build()
 
+    def add_step(
+        self,
+        name: str,
+        graph: nx.DiGraph,
+        step_config: dict
+    ):
+        step_vars = step_config.get("vars", {})
+        combined_vars = self.config.get("vars", {}) | step_vars
+
+        if "run" not in step_config:
+            raise click.UsageError(f"The key 'run' was not found for step {name}")
+
+        step_kwargs = {
+            "run": step_config["run"],
+            "vars": combined_vars,
+            "when": as_list(step_config.get("when", []))
+        }
+
+        graph.add_node(
+            name,
+            **step_kwargs
+        )
+
+        for dependency in as_list(step_config.get("after", [])):
+            if dependency not in graph:
+                raise ValueError(
+                    f"Unknown step '{dependency}' referenced by '{step_name}'"
+                )
+    
+            graph.add_edge(dependency, name)
+ 
     def build(self):
         graph = nx.DiGraph()
 
@@ -58,7 +89,8 @@ class Workflow:
                 when=step.get("when", []),
             )
 
-        for step_name, step in self.config["steps"].items():
+        for step_name, step in self.config.get("steps", {}).items():
+            self.add_node(step_name, graph, step)
             for dependency in as_list(step.get("after", [])):
                 if dependency not in graph:
                     raise ValueError(
