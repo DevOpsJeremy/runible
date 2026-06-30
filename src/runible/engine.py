@@ -18,12 +18,12 @@ class Run:
 
     def __init__(self, file):
         self.file = file
-        self.load_config()
+        self.config = self.load_config()
         self.validate_config(self.config)
         self.workflow = self.build_workflow()
 
     def load_config(self):
-        self.config = yaml.safe_load(self.file)
+        return yaml.safe_load(self.file)
 
     @classmethod
     def validate_config(cls, config):
@@ -38,8 +38,8 @@ class Run:
         return Workflow(self.config)
 
     def run(self):
+        print(self.config)
         print(self.workflow.graph.nodes(data=True))
-        print([i for i in dir(self.workflow.graph) if not i.startswith("_")])
 
 
 class Workflow:
@@ -47,7 +47,7 @@ class Workflow:
         self.config = config
         self.graph = self.build()
 
-    def add_step(self, name: str, graph: nx.DiGraph, step_config: dict):
+    def add_step(self, name: str, step_config: dict, graph: nx.DiGraph):
         step_vars = step_config.get("vars", {})
         combined_vars = self.config.get("vars", {}) | step_vars
 
@@ -71,23 +71,8 @@ class Workflow:
     def build(self):
         graph = nx.DiGraph()
 
-        for step_name, step in self.config["steps"].items():
-            graph.add_node(
-                step_name,
-                run=step["run"],
-                vars=step.get("vars", {}),
-                when=step.get("when", []),
-            )
-
         for step_name, step in self.config.get("steps", {}).items():
-            self.add_node(step_name, graph, step)
-            for dependency in as_list(step.get("after", [])):
-                if dependency not in graph:
-                    raise ValueError(
-                        f"Unknown step '{dependency}' referenced by '{step_name}'"
-                    )
-
-                graph.add_edge(dependency, step_name)
+            self.add_step(step_name, step, graph)
 
         if not nx.is_directed_acyclic_graph(graph):
             raise ValueError("Run contains one or more dependency cycles")
