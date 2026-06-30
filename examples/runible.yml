@@ -16,5 +16,11 @@ steps:
     after:
       - step1
     run: playbook3.yml
+    vars:
+      var1: foo
     when:
       - step1 is failed
+  step4:
+    after:
+      - step2
+    run: pb4.yml
