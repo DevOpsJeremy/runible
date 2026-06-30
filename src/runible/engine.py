@@ -47,12 +47,7 @@ class Workflow:
         self.config = config
         self.graph = self.build()
 
-    def add_step(
-        self,
-        name: str,
-        graph: nx.DiGraph,
-        step_config: dict
-    ):
+    def add_step(self, name: str, graph: nx.DiGraph, step_config: dict):
         step_vars = step_config.get("vars", {})
         combined_vars = self.config.get("vars", {}) | step_vars
 
@@ -62,22 +57,17 @@ class Workflow:
         step_kwargs = {
             "run": step_config["run"],
             "vars": combined_vars,
-            "when": as_list(step_config.get("when", []))
+            "when": as_list(step_config.get("when", [])),
         }
 
-        graph.add_node(
-            name,
-            **step_kwargs
-        )
+        graph.add_node(name, **step_kwargs)
 
         for dependency in as_list(step_config.get("after", [])):
             if dependency not in graph:
-                raise ValueError(
-                    f"Unknown step '{dependency}' referenced by '{step_name}'"
-                )
-    
+                raise ValueError(f"Unknown step '{dependency}' referenced by '{name}'")
+
             graph.add_edge(dependency, name)
- 
+
     def build(self):
         graph = nx.DiGraph()
 
