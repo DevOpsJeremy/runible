@@ -108,8 +108,8 @@ class StepConfig:
     def get_dependencies(self):
         return self.config.get("after", [])
 
-    def get_step(self, scheduler: Scheduler = None) -> Step:
-        return Step(self, scheduler)
+    def get_step(self, scheduler: Scheduler = None, **kwargs) -> Step:
+        return Step(self, scheduler, **kwargs)
 
 
 class Step:
@@ -247,8 +247,8 @@ class Run:
 
         self.start_scheduler()
 
-        #for step in self.steps:
-            #getattr(step, method)()
+        # for step in self.steps:
+        # getattr(step, method)()
 
     def run(self):
         self.invoke("run")
@@ -281,11 +281,7 @@ class Scheduler:
         if self.graph is None:
             return
 
-        return [
-            step
-            for step in self.graph.nodes
-            if self.graph.in_degree(step) == 0
-        ]
+        return [step for step in self.graph.nodes if self.graph.in_degree(step) == 0]
 
     def start_node(self, node: str):
         if self.graph is None:
