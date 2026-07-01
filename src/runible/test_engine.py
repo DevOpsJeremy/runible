@@ -1,6 +1,6 @@
 import pytest
 import click
-from .engine import Run
+from .engine import RunConfig
 
 VALID_CONFIG = {
     "vars": {"var1": "val1"},
@@ -20,9 +20,9 @@ INVALID_CONFIG = {"other_key": "other_value"}
 
 
 def test_valid_configuration():
-    Run.validate_config(VALID_CONFIG)
+    RunConfig.validate_config(VALID_CONFIG)
 
 
 def test_invalid_configuration():
     with pytest.raises(click.UsageError):
-        Run.validate_config(INVALID_CONFIG)
+        RunConfig.validate_config(INVALID_CONFIG)

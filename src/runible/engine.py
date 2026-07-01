@@ -5,19 +5,25 @@ import json
 import yaml
 import jsonschema
 import networkx as nx
+import queue
+from ansible_runner import interface as runner_interface
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 from .utilities import as_list
 
 
-class Run:
+SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
+
+
+class RunConfig:
     """
-    Builds a run instance
+    Builds a run configuration instance
     """
 
-    SCHEMA_FILE = Path(__file__).resolve().parent / "schemas" / "run.schema.json"
+    SCHEMA_FILE = SCHEMA_DIR / "run.schema.json"
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
@@ -26,7 +32,7 @@ class Run:
         self.config = self.load_config()
         self.clean_config(self.config)
         self.validate_config(self.config)
-        self.workflow = self.build_workflow()
+        self.run = self.get_run()
 
     def load_config(self):
         return yaml.safe_load(self.file)
@@ -53,12 +59,8 @@ class Run:
                 except KeyError:
                     pass
 
-    def build_workflow(self):
-        return Workflow(self.config)
-
-    def run(self):
-        print(self.config)
-        print(self.workflow.graph.nodes(data=True))
+    def get_run(self):
+        return Run(self.config)
 
 
 class StepState(Enum):
@@ -67,6 +69,7 @@ class StepState(Enum):
     RUNNING = auto()
     SKIPPED = auto()
     SUCCESS = auto()
+    UNKNOWN = auto()
 
 
 @dataclass
@@ -76,25 +79,14 @@ class StepResult:
     rc: int
 
 
-# TODO: Add the ansible logic
-import random
-
-
-def run_ansible(step: Step):
-    if random.choice([True, False]):
-        return 0
-
-    return 1
-
-
-class Step:
+class StepConfig:
     def __init__(self, name: str, config: dict, vars: dict = {}):
         self.name = name
         self.config = config
         self.validate_config()
-        self.merge_vars(config, vars)
         self.clean_config(self.config)
-        self.state = None
+        self.merge_vars(config, vars)
+        self.dependencies = self.get_dependencies()
 
     @classmethod
     def clean_config(cls, config):
@@ -113,10 +105,66 @@ class Step:
         if "run" not in self.config:
             raise click.UsageError(f"The key 'run' was not found for step {self.name}")
 
+    def get_dependencies(self):
+        return self.config.get("after", [])
+
+    def get_step(self, scheduler: Scheduler = None) -> Step:
+        return Step(self, scheduler)
+
+
+class Step:
+    STATE_MAP = {
+        "starting": StepState.RUNNING,
+        "failed": StepState.FAILED,
+        "successful": StepState.SUCCESS,
+        "running": StepState.RUNNING,
+        "unknown": StepState.UNKNOWN,
+    }
+
+    def __init__(self, config: StepConfig, scheduler: Scheduler = None, **kwargs):
+        self.scheduler = scheduler
+        self.config = config
+        self.name = self.config.name
+        self.playbook = self.config.config.get("run", None)
+        self.extravars = self.config.config.get("vars", {})
+        self.runner_kwargs = self.get_runner_kwargs(**kwargs)
+        self.state = None
+
+    def fail(self, msg: str, source_exception: Exception = None):
+        full_msg = f"Error in step '{self.name}': {msg}"
+        exception = click.UsageError(full_msg)
+
+        if source_exception is None:
+            raise exception
+        else:
+            raise exception from source_exception
+
+    def clean_playbook(self):
+        if self.playbook is None:
+            self.fail("The key 'run' was not found")
+        try:
+            return Path(self.playbook).resolve()
+        except Exception as e:
+            self.fail(f"Error locating playbook '{self.playbook}'", e)
+
+    def get_runner_kwargs(self, **kwargs):
+        runner_kwargs = {
+            "playbook": str(self.clean_playbook()),
+            "extravars": self.extravars,
+        }
+        if self.scheduler is not None:
+            runner_kwargs = {
+                "cancel_callback": self.cancel_callback,
+                "finished_callback": self.finished_callback,
+                "status_handler": self.status_handler,
+                **runner_kwargs,
+            }
+        return {**kwargs, **runner_kwargs}
+
     def add_to_graph(self, graph: nx.DiGraph):
         graph.add_node(self.name, step=self)
 
-        for dependency in self.config.get("after", []):
+        for dependency in self.config.dependencies:
             if dependency not in graph:
                 raise ValueError(
                     f"Unknown step '{dependency}' referenced by '{self.name}'"
@@ -124,29 +172,55 @@ class Step:
 
             graph.add_edge(dependency, self.name)
 
-    def run(self) -> StepResult:
-        rc = run_ansible(self)
+    def cancel_callback(self, *args, **kwargs):
+        pass
 
-        return StepResult(
-            step=self.name,
-            status=StepState.SUCCESS if rc == 0 else StepState.FAILED,
-            rc=rc,
-        )
+    def finished_callback(self, *args, **kwargs):
+        pass
+
+    def status_handler(self, *args, **kwargs):
+        print(f"{args}")
+        s = args[0]
+        print(s["status"])
+        print(self.get_state(s["status"]))
+        self.scheduler.queue.put(self)
+        pass
+
+    def get_state(self, status: str):
+        try:
+            return self.STATE_MAP[status]
+        except KeyError:
+            return StepState.UNKNOWN
+
+    def invoke(self, method: str):
+        if method not in ["run", "run_async"]:
+            raise click.UsageError(f"Unauthorized method: {method}")
+
+        getattr(runner_interface, method)(**self.runner_kwargs)
+
+    def run(self):
+        self.invoke("run")
+
+    def run_async(self):
+        self.invoke("run_async")
 
 
-class Workflow:
+class Run:
     """
-    Builds the workflow graph
+    Assembles a workflow run
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, scheduler: Scheduler = None):
         self.config = config
+        self.scheduler = scheduler or Scheduler()
         self.steps = self.get_steps()
         self.graph = self.build()
 
     def get_steps(self):
         return [
-            Step(name, config, self.config.get("vars", {}))
+            StepConfig(name, config, self.config.get("vars", {})).get_step(
+                self.scheduler
+            )
             for name, config in self.config.get("steps", {}).items()
         ]
 
@@ -161,17 +235,84 @@ class Workflow:
 
         return graph
 
+    def start_scheduler(self):
+        if self.scheduler is None:
+            return
+
+        self.scheduler.start(self.graph)
+
+    def invoke(self, method: str):
+        if method not in ["run", "run_async"]:
+            raise click.UsageError(f"Unauthorized method: {method}")
+
+        self.start_scheduler()
+
+        #for step in self.steps:
+            #getattr(step, method)()
+
+    def run(self):
+        self.invoke("run")
+
+    def run_async(self):
+        self.invoke("run_async")
+
 
 class Executor(ThreadPoolExecutor):
     """
     Executes the workflow
     """
 
-    def __init__(self, workflow: Workflow, **kwargs):
+    def __init__(self, run: Run, **kwargs):
         super()
-        self.workflow = workflow
+        self.run = run
 
 
 class Scheduler:
     def __init__(self):
-        pass
+        self.graph = None
+        self.queue = None
+
+    def start(self, graph: nx.DiGraph):
+        self.graph = graph
+        self.queue = queue.Queue()
+        self.start_handler()
+
+    def get_starters(self):
+        if self.graph is None:
+            return
+
+        return [
+            step
+            for step in self.graph.nodes
+            if self.graph.in_degree(step) == 0
+        ]
+
+    def start_node(self, node: str):
+        if self.graph is None:
+            return
+
+        self.graph.nodes[node]["step"].run_async()
+
+    def get_successors(self, node):
+        if self.graph is None:
+            return
+
+        return self.graph.successors(node)
+
+    def get_handler_thread(self, daemon: bool = True):
+        return Thread(target=self.handler, daemon=daemon)
+
+    def start_handler(self):
+        thread = self.get_handler_thread()
+        thread.start()
+
+    def handler(self):
+        print("in handler")
+        for node in self.get_starters():
+            print(f"processing node '{node}'")
+            self.start_node(node)
+
+        while True:
+            event = self.queue.get()
+            print(f"Working on {event}")
+            self.queue.task_done()
