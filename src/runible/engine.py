@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
+from threading import Thread, Event
 from .utilities import as_list
 
 
@@ -271,6 +271,7 @@ class Scheduler:
     def __init__(self):
         self.graph = None
         self.queue = None
+        self._stop = Event()
 
     def start(self, graph: nx.DiGraph):
         self.graph = graph
@@ -287,6 +288,7 @@ class Scheduler:
         if self.graph is None:
             return
 
+        # TODO: Should this have an option to run() or run_async()?
         self.graph.nodes[node]["step"].run_async()
 
     def get_successors(self, node):
@@ -295,7 +297,7 @@ class Scheduler:
 
         return self.graph.successors(node)
 
-    def get_handler_thread(self, daemon: bool = True):
+    def get_handler_thread(self, daemon: bool = False):
         return Thread(target=self.handler, daemon=daemon)
 
     def start_handler(self):
