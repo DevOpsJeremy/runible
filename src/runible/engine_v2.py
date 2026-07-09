@@ -19,7 +19,7 @@ class Run(nx.DiGraph):
 
 class Engine:
     def __init__(self, run: Run):
-        sefl.run = run
+        self.run = run
 
     def handler(self):
         print("in handler")
