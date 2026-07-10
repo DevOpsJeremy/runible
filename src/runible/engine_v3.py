@@ -25,14 +25,48 @@ class RunConfig:
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
-    def __init__(self, file):
-        self.file = file
-        self.content = self.load_content()
-        self.clean_content(self.content)
-        self.validate_conteent(self.content)
+    def __init__(
+        self,
+        vars: dict = {},
+        steps: dict = {},
+        *args,
+        **kwargs
+    ):
+        self.vars = self.get_vars(vars)
+        self.steps = self.get_steps(steps)
+        #self.file = file
+        #self.content = self.load_content()
+        #self.clean_content(self.content)
+        #self.validate_conteent(self.content)
 
-    def load_content(self):
-        return yaml.safe_load(self.file)
+    def get_vars(self, vars):
+        if vars is None:
+            return
+
+        return vars
+
+    def get_steps(self, steps):
+        if steps is None:
+            return
+
+        step_list = []
+
+        for name, step in steps.items():
+            step_list.append({'name': name, 'step': step})
+
+        return step_list
+
+    @classmethod
+    def from_file(cls, file):
+        content = cls.load_content(file)
+        cls.clean_content(content)
+        cls.validate_content(content)
+        return cls(**content)
+
+
+    @classmethod
+    def load_content(cls, file):
+        return yaml.safe_load(file)
 
     @classmethod
     def validate_content(cls, content):
@@ -64,26 +98,26 @@ class RunGraph(nx.DiGraph):
 
     @classmethod
     def build_from_file(cls, file):
-        return cls.build(RunConfig(file))
+        return cls.build(RunConfig.from_file(file))
 
     @classmethod
     def build(cls, config: RunConfig = None):
         graph = cls(config)
-        steps = graph.config.config.get("steps", {})
+        steps = graph.config.steps
         print(steps)
 
-        for name, step in steps.items():
-            print(f"name: {name}, step: {step}")
-            graph.add_node(name, step=step)
+        for step in steps:
+            print(f"name: {step['name']}, step: {step}")
+            graph.add_node(step['name'], step=step)
 
-        for name, step in steps.items():
-            for dependency in step.get("after", []):
+        for step in steps:
+            for dependency in step['step'].get("after", []):
                 if dependency not in graph:
                     raise ValueError(
-                        f"Unknown step '{dependency}' referenced by '{name}'"
+                        f"Unknown step '{dependency}' referenced by '{step['name']}'"
                     )
 
-                graph.add_edge(dependency, name)
+                graph.add_edge(dependency, step['name'])
 
         if not nx.is_directed_acyclic_graph(graph):
             raise ValueError("Run contains one or more dependency cycles")
@@ -110,7 +144,7 @@ class Run:
                 if self.graph.in_degree(step) == 0:
                     _result = executor.submit(
                         run_step,
-                        {"name": step, "step": self.graph.config.config["steps"][step]},
+                        {"name": step, "step": self.graph.config.steps},
                     )
                     print(f"Starting '{step}': {_result}")
                     result.append(_result)
