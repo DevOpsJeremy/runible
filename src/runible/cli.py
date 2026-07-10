@@ -1,5 +1,5 @@
 import click
-from .engine_v3 import RunConfig
+from .engine_v3 import Run, RunGraph
 
 
 @click.group(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
@@ -10,4 +10,5 @@ def runible():
 @runible.command(name="run")
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
-    RunConfig(file).get_run().run()
+    graph = RunGraph.build_from_file(file)
+    Run(graph).run()

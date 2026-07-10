@@ -32,29 +32,12 @@ class RunConfig:
         *args,
         **kwargs
     ):
-        self.vars = self.get_vars(vars)
-        self.steps = self.get_steps(steps)
+        self.vars = self.vars
+        self.steps = self.steps
         #self.file = file
         #self.content = self.load_content()
         #self.clean_content(self.content)
         #self.validate_conteent(self.content)
-
-    def get_vars(self, vars):
-        if vars is None:
-            return
-
-        return vars
-
-    def get_steps(self, steps):
-        if steps is None:
-            return
-
-        step_list = []
-
-        for name, step in steps.items():
-            step_list.append({'name': name, 'step': step})
-
-        return step_list
 
     @classmethod
     def from_file(cls, file):
@@ -106,18 +89,19 @@ class RunGraph(nx.DiGraph):
         steps = graph.config.steps
         print(steps)
 
-        for step in steps:
-            print(f"name: {step['name']}, step: {step}")
-            graph.add_node(step['name'], step=step)
+        for name, step in steps.items():
+            print(f"name: {name}, step: {step}")
+            graph.add_node(name, step=Step(name, **step))
 
-        for step in steps:
-            for dependency in step['step'].get("after", []):
+        for name, step in steps.items():
+            for dependency in step.get("after", []):
+                print(f"step: {name}, dependency: {dependency}")
                 if dependency not in graph:
                     raise ValueError(
-                        f"Unknown step '{dependency}' referenced by '{step['name']}'"
+                        f"Unknown step '{dependency}' referenced by '{name}'"
                     )
 
-                graph.add_edge(dependency, step['name'])
+                graph.add_edge(dependency, name)
 
         if not nx.is_directed_acyclic_graph(graph):
             raise ValueError("Run contains one or more dependency cycles")
@@ -130,33 +114,55 @@ class Run:
         self.graph = graph
 
     def run(self):
-        def run_step(config):
-            wait_time = random.randint(25, 45)
+        def run_step(step):
+            wait_time = random.randint(5, 15)
 
-            print(f"{datetime.now()} : START({config['name']}) {config['step']}")
+            print(f"{datetime.now()} : START({step.name}) {step}")
             time.sleep(wait_time)
-            print(f"{datetime.now()} : END({config['name']})   {config['step']}")
+            print(f"{datetime.now()} : END({step.name})   {step}")
+
+        result = []
 
         with ThreadPoolExecutor(max_workers=5) as executor:
-            result = []
-
-            for step in self.graph.nodes:
-                if self.graph.in_degree(step) == 0:
-                    _result = executor.submit(
-                        run_step,
-                        {"name": step, "step": self.graph.config.steps},
-                    )
+            for name, step in self.graph.nodes.items():
+                if self.graph.in_degree(name) == 0:
+                    _result = step.execute(executor, run_step, step)
                     print(f"Starting '{step}': {_result}")
                     result.append(_result)
-
+    
             for i in as_completed(result):
+                print(f"Finished : {i}")
+                print(f"Finished : {type(i)}")
                 print(f"Finished : {i.result()}")
+    
 
+    def run_next(self, step):
+        for successor in self.graph.successors(step):
+            print(type(successor))
+            print(successor)
 
-with open(sys.argv[1], "r") as f:
-    graph = RunGraph.build_from_file(f)
+class Step:
+    def __init__(
+        self,
+        name,
+        vars,
+        after,
+        when
+    ):
+        self.name = name
+        self.vars = vars
+        self.after = as_list(after)
+        self.when = as_list(when)
+        self.future = None
 
-Run(graph).run()
+    def execute(self, executor, func, *args):
+        future = executor.submit(
+            func,
+            *args
+        )
+        self.future = future
+        return self.future
+
 
 # old
 #

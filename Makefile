@@ -1,7 +1,10 @@
-.PHONY: pre-build build install pre-test test pre-lint lint pre-format format clean all
+.PHONY: pre-build build install pre-test test pre-lint lint pre-format format clean all run
 define HEADER
 	@printf "\n-----\n%s\n-----\n\n" "$@"
 endef
+
+CMD?=runible
+RUNIBLE_RUN_FILE?=examples/runible.yml
 
 pre-build:
 	$(HEADER)
@@ -46,3 +49,6 @@ clean:
 	rm -f *junit.xml
 
 all: clean install test lint
+
+run: install
+	$(CMD) run $(RUNIBLE_RUN_FILE)
