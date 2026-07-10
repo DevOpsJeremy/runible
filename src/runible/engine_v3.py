@@ -27,17 +27,17 @@ class RunConfig:
 
     def __init__(self, file):
         self.file = file
-        self.config = self.load_config()
-        self.clean_config(self.config)
-        self.validate_config(self.config)
+        self.content = self.load_content()
+        self.clean_content(self.content)
+        self.validate_conteent(self.content)
 
-    def load_config(self):
+    def load_content(self):
         return yaml.safe_load(self.file)
 
     @classmethod
-    def validate_config(cls, config):
+    def validate_content(cls, content):
         try:
-            jsonschema.validate(instance=config, schema=cls.SCHEMA)
+            jsonschema.validate(instance=content, schema=cls.SCHEMA)
             return True
         except jsonschema.exceptions.ValidationError as e:
             path = e.json_path.removeprefix("$.")
@@ -45,14 +45,14 @@ class RunConfig:
             raise click.UsageError(msg) from e
 
     @classmethod
-    def clean_config(cls, config):
-        return_config = config.copy()
+    def clean_content(cls, content):
+        return_content = content.copy()
 
-        for step_name, step in config.get("steps", {}).items():
+        for step_name, step in content.get("steps", {}).items():
             # Convert strings to list
             for key in ["when", "after"]:
                 try:
-                    return_config["steps"][step_name][key] = as_list(step[key])
+                    return_content["steps"][step_name][key] = as_list(step[key])
                 except KeyError:
                     pass
 
@@ -63,16 +63,18 @@ class RunGraph(nx.DiGraph):
         self.config = config
 
     @classmethod
-    def from_file(cls, file):
-        return cls(RunConfig(file))
+    def build_from_file(cls, file):
+        return cls.build(RunConfig(file))
 
-    def build(self):
-        steps = self.config.config.get('steps', {})
+    @classmethod
+    def build(cls, config: RunConfig = None):
+        graph = cls(config)
+        steps = graph.config.config.get("steps", {})
         print(steps)
 
         for name, step in steps.items():
             print(f"name: {name}, step: {step}")
-            self.add_node(name, step=step)
+            graph.add_node(name, step=step)
 
         for name, step in steps.items():
             for dependency in step.get("after", []):
@@ -81,12 +83,13 @@ class RunGraph(nx.DiGraph):
                         f"Unknown step '{dependency}' referenced by '{name}'"
                     )
 
-                self.add_edge(dependency, name)
- 
-        if not nx.is_directed_acyclic_graph(self):
+                graph.add_edge(dependency, name)
+
+        if not nx.is_directed_acyclic_graph(graph):
             raise ValueError("Run contains one or more dependency cycles")
 
-        return self
+        return graph
+
 
 class Run:
     def __init__(self, graph: RunGraph = None):
@@ -105,40 +108,43 @@ class Run:
 
             for step in self.graph.nodes:
                 if self.graph.in_degree(step) == 0:
-                    _result = executor.submit(run_step, {'name': step, 'step': self.graph.config.config['steps'][step]})
+                    _result = executor.submit(
+                        run_step,
+                        {"name": step, "step": self.graph.config.config["steps"][step]},
+                    )
                     print(f"Starting '{step}': {_result}")
                     result.append(_result)
 
             for i in as_completed(result):
                 print(f"Finished : {i.result()}")
 
-with open(sys.argv[1], 'r') as f:
-    graph = RunGraph.from_file(f)
 
-graph.build()
+with open(sys.argv[1], "r") as f:
+    graph = RunGraph.build_from_file(f)
+
 Run(graph).run()
 
 # old
 #
-#import click
-#import json
-#import yaml
-#import jsonschema
-#import networkx as nx
-#import queue
-#from ansible_runner import interface as runner_interface
-#from dataclasses import dataclass
-#from enum import Enum, auto
-#from pathlib import Path
-#from concurrent.futures import ThreadPoolExecutor
-#from threading import Thread, Event
-#from .utilities import as_list
+# import click
+# import json
+# import yaml
+# import jsonschema
+# import networkx as nx
+# import queue
+# from ansible_runner import interface as runner_interface
+# from dataclasses import dataclass
+# from enum import Enum, auto
+# from pathlib import Path
+# from concurrent.futures import ThreadPoolExecutor
+# from threading import Thread, Event
+# from .utilities import as_list
 #
 #
-#SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
+# SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 #
 #
-#class RunConfig:
+# class RunConfig:
 #    """
 #    Builds a run configuration instance
 #    """
@@ -183,7 +189,7 @@ Run(graph).run()
 #        return Run(self.config)
 #
 #
-#class StepState(Enum):
+# class StepState(Enum):
 #    FAILED = auto()
 #    PENDING = auto()
 #    RUNNING = auto()
@@ -192,14 +198,14 @@ Run(graph).run()
 #    UNKNOWN = auto()
 #
 #
-#@dataclass
-#class StepResult:
+# @dataclass
+# class StepResult:
 #    step: str
 #    status: StepState
 #    rc: int
 #
 #
-#class StepConfig:
+# class StepConfig:
 #    def __init__(self, name: str, config: dict, vars: dict = {}):
 #        self.name = name
 #        self.config = config
@@ -232,7 +238,7 @@ Run(graph).run()
 #        return Step(self, scheduler, **kwargs)
 #
 #
-#class Step:
+# class Step:
 #    STATE_MAP = {
 #        "starting": StepState.RUNNING,
 #        "failed": StepState.FAILED,
@@ -325,7 +331,7 @@ Run(graph).run()
 #        self.invoke("run_async")
 #
 #
-#class Run:
+# class Run:
 #    """
 #    Assembles a workflow run
 #    """
@@ -377,7 +383,7 @@ Run(graph).run()
 #        self.invoke("run_async")
 #
 #
-#class Executor(ThreadPoolExecutor):
+# class Executor(ThreadPoolExecutor):
 #    """
 #    Executes the workflow
 #    """
@@ -387,7 +393,7 @@ Run(graph).run()
 #        self.run = run
 #
 #
-#class Scheduler:
+# class Scheduler:
 #    def __init__(self):
 #        self.graph = None
 #        self.queue = None

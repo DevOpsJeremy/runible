@@ -1,4 +1,3 @@
-
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
@@ -44,16 +43,17 @@ class RunConfig:
                     pass
 
 
-
 # old
 import networkx as nx
 from enum import Enum, auto
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread, Event
 
+
 # TODO: Delete
 class Node:
     pass
+
 
 class State(Enum):
     PENDING = auto()
@@ -63,9 +63,11 @@ class State(Enum):
     SUCCESS = auto()
     UNKNOWN = auto()
 
+
 class Run(nx.DiGraph):
     def __init__(self):
         pass
+
 
 class Engine:
     def __init__(self, run: Run):
@@ -78,7 +80,7 @@ class Engine:
             starter.run()
 
     def run_thread(self):
-
+        pass
 
     def get_handler_thread(self, daemon: bool = False):
         return Thread(target=self.handler, daemon=daemon)
@@ -98,19 +100,24 @@ class Engine:
             print(f"Working on {event}")
             self.queue.task_done()
 
+
 import concurrent.futures
 import urllib.request
 
-URLS = ['http://www.foxnews.com/',
-        'http://www.cnn.com/',
-        'http://europe.wsj.com/',
-        'http://www.bbc.co.uk/',
-        'http://nonexistent-subdomain.python.org/']
+URLS = [
+    "http://www.foxnews.com/",
+    "http://www.cnn.com/",
+    "http://europe.wsj.com/",
+    "http://www.bbc.co.uk/",
+    "http://nonexistent-subdomain.python.org/",
+]
+
 
 # Retrieve a single page and report the URL and contents
 def load_url(url, timeout):
     with urllib.request.urlopen(url, timeout=timeout) as conn:
         return conn.read()
+
 
 # We can use a with statement to ensure threads are cleaned up promptly
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -121,9 +128,10 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         try:
             data = future.result()
         except Exception as exc:
-            print('%r generated an exception: %s' % (url, exc))
+            print("%r generated an exception: %s" % (url, exc))
         else:
-            print('%r page is %d bytes' % (url, len(data)))
+            print("%r page is %d bytes" % (url, len(data)))
+
 from datetime import datetime
 import networkx as nx
 from enum import Enum, auto
@@ -132,14 +140,18 @@ from threading import Thread, Event
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import urllib.request
 
-URLS = ['http://www.foxnews.com/',
-        'http://www.cnn.com/',
-        'http://europe.wsj.com/',
-        'http://www.bbc.co.uk/',
-        'http://nonexistent-subdomain.python.org/']
+URLS = [
+    "http://www.foxnews.com/",
+    "http://www.cnn.com/",
+    "http://europe.wsj.com/",
+    "http://www.bbc.co.uk/",
+    "http://nonexistent-subdomain.python.org/",
+]
+
 
 def print_output(text):
     print(f"{datetime.now()}: {text}")
+
 
 with ThreadPoolExecutor(max_workers=5) as executor:
     output_result = {executor.submit(print_output, t): t for t in URLS}
