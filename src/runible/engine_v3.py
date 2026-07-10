@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import sys
 import click
 import networkx as nx
 from pathlib import Path
 import json
 import yaml
 import jsonschema
-from .utilities import as_list
+from runible.utilities import as_list
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+import time
+import random
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -52,17 +57,22 @@ class RunConfig:
                     pass
 
 
-class Run:
-    def __init__(self, config: dict):
+class RunGraph(nx.DiGraph):
+    def __init__(self, config: RunConfig = None):
+        super().__init__()
         self.config = config
 
-    def build(self):
-        graph = nx.DiGraph()
+    @classmethod
+    def from_file(cls, file):
+        return cls(RunConfig(file))
 
-        steps = self.config.get('steps', {})
+    def build(self):
+        steps = self.config.config.get('steps', {})
+        print(steps)
 
         for name, step in steps.items():
-            graph.add_node(name, step=step)
+            print(f"name: {name}, step: {step}")
+            self.add_node(name, step=step)
 
         for name, step in steps.items():
             for dependency in step.get("after", []):
@@ -71,14 +81,42 @@ class Run:
                         f"Unknown step '{dependency}' referenced by '{name}'"
                     )
 
-                graph.add_edge(dependency, name)
+                self.add_edge(dependency, name)
  
-        if not nx.is_directed_acyclic_graph(graph):
+        if not nx.is_directed_acyclic_graph(self):
             raise ValueError("Run contains one or more dependency cycles")
 
-        return graph
+        return self
 
+class Run:
+    def __init__(self, graph: RunGraph = None):
+        self.graph = graph
 
+    def run(self):
+        def run_step(config):
+            wait_time = random.randint(25, 45)
+
+            print(f"{datetime.now()} : START({config['name']}) {config['step']}")
+            time.sleep(wait_time)
+            print(f"{datetime.now()} : END({config['name']})   {config['step']}")
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            result = []
+
+            for step in self.graph.nodes:
+                if self.graph.in_degree(step) == 0:
+                    _result = executor.submit(run_step, {'name': step, 'step': self.graph.config.config['steps'][step]})
+                    print(f"Starting '{step}': {_result}")
+                    result.append(_result)
+
+            for i in as_completed(result):
+                print(f"Finished : {i.result()}")
+
+with open(sys.argv[1], 'r') as f:
+    graph = RunGraph.from_file(f)
+
+graph.build()
+Run(graph).run()
 
 # old
 #

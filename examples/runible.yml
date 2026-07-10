@@ -4,6 +4,8 @@ vars:
   var1: val1
 
 steps:
+  step5:
+    run: playbook5.yml
   step1:
     run: playbook1.yml
     vars:
