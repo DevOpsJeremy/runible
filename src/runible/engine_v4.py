@@ -150,47 +150,45 @@ class Run:
         self,
         graph: Graph
     ):
-        pass
+        self.graph = graph
 
-def run(path: str):
-    with open(path, 'r') as f:
-        graph = Graph.from_file(f)
-        print(graph)
-
-    remaining = {
-        node: graph.in_degree(node)
-        for node in graph.nodes
-    }
-
-    completed = set()
-
-    future_to_step = {}
-
-    def run_step(step, triggeror = None):
+    @classmethod
+    def run_step(cls, step, triggeror = None):
         wait_time = random.randint(5, 20)
 
         print(f"{datetime.now()} : START({step}){'' if triggeror is None else f" (triggered by: {triggeror})"}")
         time.sleep(wait_time)
         print(f"{datetime.now()} : END({step})")
 
+    def run(self):
+        remaining = {
+            node: self.graph.in_degree(node)
+            for node in self.graph.nodes
+        }
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        for step, degree in remaining.items():
-            if degree == 0:
-                f = executor.submit(run_step, step)
-                future_to_step[f] = step
+        completed = set()
 
-        while future_to_step:
-            f = next(as_completed(future_to_step))
-            step = future_to_step.pop(f)
+        future_to_step = {}
 
-            for successor in graph.successors(step):
-                remaining[successor] -= 1
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            for step, degree in remaining.items():
+                if degree == 0:
+                    f = executor.submit(self.run_step, step)
+                    future_to_step[f] = step
 
-                if remaining[successor] == 0:
-                    f = executor.submit(run_step, successor, step)
-                    future_to_step[f] = successor
+            while future_to_step:
+                f = next(as_completed(future_to_step))
+                step = future_to_step.pop(f)
+
+                for successor in self.graph.successors(step):
+                    remaining[successor] -= 1
+
+                    if remaining[successor] == 0:
+                        f = executor.submit(self.run_step, successor, step)
+                        future_to_step[f] = successor
 
 
+with open('examples/runible.yml', 'r') as f:
+    graph = Graph.from_file(f)
 
-run('examples/runible.yml')
+Run(graph).run()
