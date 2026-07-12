@@ -2,5 +2,5 @@ click==8.4.2
 PyYAML==6.0.3
 jsonschema==4.26.0
 networkx==3.6.1
-ansible_runner==2.4.3
-ansible_core==2.21.1
+ansible_runner>=1.0.0
+ansible_core>=1.0.0
