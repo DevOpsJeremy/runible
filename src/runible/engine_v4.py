@@ -14,7 +14,7 @@ import random
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
-class RunStep:
+class Step:
     def __init__(
         self,
         name: str,
@@ -44,10 +44,10 @@ class RunStep:
             self.when = as_list(when)
 
     def __str__(self):
-        return f"<RunStep {self.name}>"
+        return f"<Step {self.name}>"
 
 
-class RunConfig:
+class Config:
     """
     Builds a run configuration instance
     """
@@ -70,7 +70,7 @@ class RunConfig:
         step_set = set()
 
         for name, step in steps.items():
-            step_set.add(RunStep(name, **step))
+            step_set.add(Step(name, **step))
 
         return step_set
 
@@ -109,45 +109,52 @@ class RunConfig:
                     pass
 
 
-class RunGraph(nx.DiGraph):
-    def __init__(self, config: RunConfig = None):
+class Graph(nx.DiGraph):
+    def __init__(self, config: Config = None):
         super().__init__()
+        self.config = config
 
     @classmethod
-    def build_from_file(cls, file):
-        return cls.build(RunConfig.from_file(file))
+    def from_file(cls, file):
+        graph = cls(Config.from_file(file))
+        graph.build()
+        return graph
 
-    @classmethod
-    def build(cls, config: RunConfig = None):
-        if config is None or config.steps is None:
+    def build(self):
+        if self.config is None or self.config.steps is None:
             raise Exception("No steps found in configuration")
 
-        graph = cls()
-        print([str(s) for s in config.steps])
+        print([str(s) for s in self.config.steps])
 
-        for step in config.steps:
+        for step in self.config.steps:
             print(f"adding node: {step}")
-            graph.add_node(step)
+            self.add_node(step)
 
-        for step in config.steps:
+        for step in self.config.steps:
             for dependency in step.after:
-                dep = next((d for d in config.steps if d.name == dependency), None)
+                dep = next((d for d in self.config.steps if d.name == dependency), None)
                 print(f"step: {step}, adding dependency: {dep}")
-                if dep not in graph:
+                if dep not in self:
                     raise ValueError(
                         f"Unknown step '{dep.name}' referenced by '{step.name}'"
                     )
 
-                graph.add_edge(dep, step)
+                self.add_edge(dep, step)
 
-        if not nx.is_directed_acyclic_graph(graph):
-            raise ValueError("Run contains one or more dependency cycles")
+        if not nx.is_directed_acyclic_graph(self):
+            raise ValueError("Graph contains one or more dependency cycles")
 
-        return graph
+
+class Run:
+    def __init__(
+        self,
+        graph: Graph
+    ):
+        pass
 
 def run(path: str):
     with open(path, 'r') as f:
-        graph = RunGraph.build_from_file(f)
+        graph = Graph.from_file(f)
         print(graph)
 
     remaining = {

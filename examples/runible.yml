@@ -26,3 +26,12 @@ steps:
     run: playbook4.yml
   step5:
     run: playbook5.yml
+  step6:
+    after:
+      - step5
+    run: playbook6.yml
+  step7:
+    after:
+      - step1
+      - step4
+    run: playbook7.yml
