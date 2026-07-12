@@ -32,8 +32,8 @@ class RunConfig:
         *args,
         **kwargs
     ):
-        self.vars = self.vars
-        self.steps = self.steps
+        self.vars = vars
+        self.steps = steps
         #self.file = file
         #self.content = self.load_content()
         #self.clean_content(self.content)
@@ -114,27 +114,30 @@ class Run:
         self.graph = graph
 
     def run(self):
-        def run_step(step):
+        def run_step(name, step):
             wait_time = random.randint(5, 15)
 
-            print(f"{datetime.now()} : START({step.name}) {step}")
+            print(f"{datetime.now()} : START({name}) {step}")
             time.sleep(wait_time)
-            print(f"{datetime.now()} : END({step.name})   {step}")
+            print(f"{datetime.now()} : END({name})   {step}")
 
         result = []
 
+        future_map = {}
+        starters = [s for s in self.graph.nodes if self.graph.in_degree(s) == 0]
+
         with ThreadPoolExecutor(max_workers=5) as executor:
-            for name, step in self.graph.nodes.items():
-                if self.graph.in_degree(name) == 0:
-                    _result = step.execute(executor, run_step, step)
-                    print(f"Starting '{step}': {_result}")
-                    result.append(_result)
-    
-            for i in as_completed(result):
+            for name in starters:
+                step = self.graph.nodes[name]
+                _result = executor.submit(run_step, name, step)
+                future_map[_result] = {'name': name, 'step': step}
+                print(f"Starting '{step}': {_result}")
+                print(future_map)
+
+            for i in as_completed(future_map):
                 print(f"Finished : {i}")
-                print(f"Finished : {type(i)}")
-                print(f"Finished : {i.result()}")
-    
+                print(f"Finished : Step : {future_map[i]}")
+ 
 
     def run_next(self, step):
         for successor in self.graph.successors(step):
@@ -145,9 +148,10 @@ class Step:
     def __init__(
         self,
         name,
-        vars,
-        after,
-        when
+        run,
+        vars = {},
+        after = [],
+        when = []
     ):
         self.name = name
         self.vars = vars
