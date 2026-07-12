@@ -192,8 +192,9 @@ class Run:
                         f = executor.submit(fn, successor, *args, **kwargs)
                         future_to_step[f] = successor
 
+
 # TODO: Delete
-def run_step(step, triggeror = None):
+def run_step(step):
     wait_time = random.randint(1, 5)
 
     print(f"{datetime.now()} : START({step})")
@@ -201,7 +202,4 @@ def run_step(step, triggeror = None):
     print(f"{datetime.now()} : END({step})")
 
 
-with open('examples/runible.yml', 'r') as f:
-    graph = Graph.from_file(f)
 
-Run(graph).run(run_step)
