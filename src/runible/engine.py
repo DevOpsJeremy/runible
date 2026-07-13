@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import jsonschema
 import networkx as nx
+import threading
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -151,6 +152,17 @@ class Run:
         graph: Graph
     ):
         self.graph = graph
+        self.threads = []
+
+    def run_async(
+        self,
+        *args,
+        **kwargs
+    ):
+        thread = threading.Thread(target=self.run, args=args, kwargs=kwargs)
+        thread.start()
+        self.threads.append(thread)
+
 
     def run(
         self,
