@@ -11,4 +11,4 @@ def runible():
 def run(file):
     graph = Graph.from_file(file)
     print(graph)
-    Run(graph).run(run_step)
+    Run(graph).run(fn=run_step)

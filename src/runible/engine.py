@@ -154,16 +154,6 @@ class Run:
         self.graph = graph
         self.threads = []
 
-    def run_async(
-        self,
-        *args,
-        **kwargs
-    ):
-        thread = threading.Thread(target=self.run, args=args, kwargs=kwargs)
-        thread.start()
-        self.threads.append(thread)
-
-
     def run(
         self,
         fn,
@@ -182,12 +172,13 @@ class Run:
         future_to_step = {}
 
         thread_pool_kwargs = dict(
+        )
+
+        with ThreadPoolExecutor(
             max_workers=max_workers,
             initializer=thread_pool_initializer,
             initargs=thread_pool_initargs
-        )
-
-        with ThreadPoolExecutor(**thread_pool_kwargs) as executor:
+        ) as executor:
             for node in self.graph.nodes:
                 if self.graph.in_degree(node) == 0:
                     f = executor.submit(fn, node, *args, **kwargs)
