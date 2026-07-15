@@ -198,7 +198,7 @@ class Run:
 
 # TODO: Delete
 def run_step(step):
-    wait_time = random.randint(1, 5)
+    wait_time = random.randint(1, 2)
 
     print(f"{datetime.now()} : START({step})")
     time.sleep(wait_time)
