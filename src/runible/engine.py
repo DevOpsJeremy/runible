@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import click
 import json
 import jsonschema
 import networkx as nx
@@ -66,6 +67,9 @@ class Config:
         step_set = set()
 
         for name, step in steps.items():
+            if "vars" in step:
+                step["vars"] = self.vars | step["vars"]
+
             step_set.add(Step(name, **step))
 
         return step_set
@@ -157,10 +161,7 @@ class Run:
         remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
         completed = set()
-
         future_to_step = {}
-
-        thread_pool_kwargs = dict()
 
         with ThreadPoolExecutor(
             max_workers=max_workers,

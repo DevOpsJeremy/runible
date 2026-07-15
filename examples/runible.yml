@@ -35,3 +35,8 @@ steps:
       - step1
       - step4
     run: playbook7.yml
+  step8:
+    after:
+      - step7
+    run: playbook8.yml
+
