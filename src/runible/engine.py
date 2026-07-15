@@ -15,6 +15,7 @@ import random
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
+
 class Step:
     def __init__(
         self,
@@ -24,7 +25,7 @@ class Step:
         after: list = [],
         when: list = [],
         *args,
-        **kwargs
+        **kwargs,
     ):
         self.name = name
         self.run = run
@@ -57,13 +58,7 @@ class Config:
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
-    def __init__(
-        self,
-        vars: dict = {},
-        steps: dict = {},
-        *args,
-        **kwargs
-    ):
+    def __init__(self, vars: dict = {}, steps: dict = {}, *args, **kwargs):
         self.vars = vars
         self.steps = self.get_steps(steps)
 
@@ -81,7 +76,6 @@ class Config:
         cls.clean_content(content)
         cls.validate_content(content)
         return cls(**content)
-
 
     @classmethod
     def load_content(cls, file):
@@ -147,10 +141,7 @@ class Graph(nx.DiGraph):
 
 
 class Run:
-    def __init__(
-        self,
-        graph: Graph
-    ):
+    def __init__(self, graph: Graph):
         self.graph = graph
         self.threads = []
 
@@ -158,26 +149,23 @@ class Run:
         self,
         fn,
         max_workers: int = 5,
-        thread_pool_initializer = None,
-        thread_pool_initargs = None,
-        *args, **kwargs
+        thread_pool_initializer=None,
+        thread_pool_initargs=None,
+        *args,
+        **kwargs,
     ):
-        remaining = {
-            node: self.graph.in_degree(node)
-            for node in self.graph.nodes
-        }
+        remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
         completed = set()
 
         future_to_step = {}
 
-        thread_pool_kwargs = dict(
-        )
+        thread_pool_kwargs = dict()
 
         with ThreadPoolExecutor(
             max_workers=max_workers,
             initializer=thread_pool_initializer,
-            initargs=thread_pool_initargs
+            initargs=thread_pool_initargs,
         ) as executor:
             for node in self.graph.nodes:
                 if self.graph.in_degree(node) == 0:
@@ -203,6 +191,3 @@ def run_step(step):
     print(f"{datetime.now()} : START({step})")
     time.sleep(wait_time)
     print(f"{datetime.now()} : END({step})")
-
-
-

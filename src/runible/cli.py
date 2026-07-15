@@ -6,6 +6,7 @@ from .engine import Run, Graph, run_step
 def runible():
     pass
 
+
 @runible.command(name="run")
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
