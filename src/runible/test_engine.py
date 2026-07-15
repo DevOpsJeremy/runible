@@ -127,3 +127,4 @@ def test_run_respects_dependencies_and_submits_successors_only_after_completion(
     assert a_end is not None
     assert b_start is not None and b_start >= a_end - 1e-6
     assert c_start is not None and c_start >= a_end - 1e-6
+
