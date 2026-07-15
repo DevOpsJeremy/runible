@@ -5,17 +5,17 @@ vars:
 
 steps:
   step1:
-    run: playbook1.yml
+    run: playbooks/playbook1.yml
     vars:
       var2: val2
   step2:
     after:
       - step1
-    run: playbook2.yml
+    run: playbooks/playbook2.yml
   step3:
     after:
       - step1
-    run: playbook3.yml
+    run: playbooks/playbook3.yml
     vars:
       var1: foo
     when:
@@ -23,20 +23,20 @@ steps:
   step4:
     after:
       - step2
-    run: playbook4.yml
+    run: playbooks/playbook4.yml
   step5:
-    run: playbook5.yml
+    run: playbooks/playbook5.yml
   step6:
     after:
       - step5
-    run: playbook6.yml
+    run: playbooks/playbook6.yml
   step7:
     after:
       - step1
       - step4
-    run: playbook7.yml
+    run: playbooks/playbook7.yml
   step8:
     after:
       - step7
-    run: playbook8.yml
+    run: playbooks/playbook8.yml
 
