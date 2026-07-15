@@ -17,7 +17,7 @@ import random
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
-class Step:
+class StepConfig:
     def __init__(
         self,
         name: str,
@@ -47,10 +47,10 @@ class Step:
             self.when = as_list(when)
 
     def __str__(self):
-        return f"<Step {self.name}>"
+        return f"<StepConfig {self.name}>"
 
 
-class Config:
+class RunConfig:
     """
     Builds a run configuration instance
     """
@@ -70,7 +70,7 @@ class Config:
             if "vars" in step:
                 step["vars"] = self.vars | step["vars"]
 
-            step_set.add(Step(name, **step))
+            step_set.add(StepConfig(name, **step))
 
         return step_set
 
@@ -109,13 +109,13 @@ class Config:
 
 
 class Graph(nx.DiGraph):
-    def __init__(self, config: Config = None):
+    def __init__(self, config: RunConfig = None):
         super().__init__()
         self.config = config
 
     @classmethod
     def from_file(cls, file):
-        graph = cls(Config.from_file(file))
+        graph = cls(RunConfig.from_file(file))
         graph.build()
         return graph
 
@@ -148,6 +148,11 @@ class Run:
     def __init__(self, graph: Graph):
         self.graph = graph
         self.threads = []
+
+    @classmethod
+    def from_file(cls, file):
+        graph = Graph.from_file(file)
+        return cls(graph)
 
     def run(
         self,

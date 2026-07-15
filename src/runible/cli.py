@@ -10,6 +10,5 @@ def runible():
 @runible.command(name="run")
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
-    graph = Graph.from_file(file)
-    print(graph)
-    Run(graph).run(fn=run_step)
+    Run.from_file(file).run(fn=run_step)
+
