@@ -123,16 +123,12 @@ class Graph(nx.DiGraph):
         if self.config is None or self.config.steps is None:
             raise Exception("No steps found in configuration")
 
-        print([str(s) for s in self.config.steps])
-
         for step in self.config.steps:
-            print(f"adding node: {step}")
             self.add_node(step)
 
         for step in self.config.steps:
             for dependency in step.after:
                 dep = next((d for d in self.config.steps if d.name == dependency), None)
-                print(f"step: {step}, adding dependency: {dep}")
                 if dep not in self:
                     raise ValueError(
                         f"Unknown step '{dep.name}' referenced by '{step.name}'"
