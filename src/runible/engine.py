@@ -4,7 +4,6 @@ import click
 import json
 import jsonschema
 import networkx as nx
-import threading
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -161,7 +160,6 @@ class Run:
     ):
         remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
-        completed = set()
         future_to_step = {}
 
         with ThreadPoolExecutor(

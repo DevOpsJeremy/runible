@@ -18,6 +18,10 @@ install:
 	$(HEADER)
 	pip install .
 
+install-ruff:
+	$(HEADER)
+	pip install ruff
+
 pre-test:
 	$(HEADER)
 	pip install pytest .
@@ -26,22 +30,24 @@ test: pre-test
 	$(HEADER)
 	pytest
 
-pre-lint:
-	$(HEADER)
-	pip install ruff
+pre-lint: install-ruff
 
 lint: pre-lint
 	$(HEADER)
 	ruff check
 	ruff format --check
 
-pre-format:
-	$(HEADER)
-	pip install ruff
+pre-format: install-ruff
 
 format: pre-format
 	$(HEADER)
 	ruff format
+
+lint-fix: pre-lint
+	$(HEADER)
+	ruff check --fix
+
+fix: format lint-fix
 
 clean:
 	$(HEADER)

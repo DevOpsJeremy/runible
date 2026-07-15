@@ -19,9 +19,9 @@ def test_stepconfig_defaults_and_str():
 
 
 def test_runconfig_get_steps_merges_vars():
-    rc = engine.RunConfig(vars={"gv": 1}, steps={
-        "step1": {"run": "echo hi", "vars": {"lv": 2}}
-    })
+    rc = engine.RunConfig(
+        vars={"gv": 1}, steps={"step1": {"run": "echo hi", "vars": {"lv": 2}}}
+    )
 
     steps = list(rc.steps)
     assert len(steps) == 1
