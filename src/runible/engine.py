@@ -50,6 +50,19 @@ class StepPlan:
         return f"<StepPlan {self.name}>"
 
 
+class Step:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def run(cls, step: StepPlan):
+        wait_time = random.randint(1, 2)
+
+        print(f"{datetime.now()} : START({step.name})")
+        time.sleep(wait_time)
+        print(f"{datetime.now()} : END({step.name})")
+
+
 class RunPlan:
     """
     Builds a run configuration instance
@@ -184,12 +197,3 @@ class Workflow:
                         successor = self.graph.nodes[successor_name]
                         f = executor.submit(fn, *args, **kwargs, **successor)
                         future_to_step[f] = successor_name
-
-
-# TODO: Delete
-def run_step(step):
-    wait_time = random.randint(1, 2)
-
-    print(f"{datetime.now()} : START({step.name})")
-    time.sleep(wait_time)
-    print(f"{datetime.now()} : END({step.name})")
