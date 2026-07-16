@@ -9,7 +9,7 @@ from runible import engine
 
 
 def test_stepconfig_defaults_and_str():
-    s = engine.StepConfig(name="s1", run="echo", vars=None, after=None, when=None)
+    s = engine.StepPlan(name="s1", run="echo", vars=None, after=None, when=None)
     assert s.name == "s1"
     assert s.run == "echo"
     assert s.vars == {}
@@ -19,7 +19,7 @@ def test_stepconfig_defaults_and_str():
 
 
 def test_runconfig_get_steps_merges_vars():
-    rc = engine.RunConfig(
+    rc = engine.RunPlan(
         vars={"gv": 1}, steps={"step1": {"run": "echo hi", "vars": {"lv": 2}}}
     )
 
@@ -33,7 +33,7 @@ def test_runconfig_get_steps_merges_vars():
 
 def test_clean_content_converts_strings_to_lists():
     content = {"steps": {"s": {"run": "r", "after": "a", "when": "w"}}}
-    engine.RunConfig.clean_content(content)
+    engine.RunPlan.clean_content(content)
     assert isinstance(content["steps"]["s"]["after"], list)
     assert content["steps"]["s"]["after"] == ["a"]
     assert isinstance(content["steps"]["s"]["when"], list)
@@ -43,7 +43,7 @@ def test_clean_content_converts_strings_to_lists():
 def test_validate_content_raises_on_missing_required():
     content = {"steps": {"s1": {}}}  # missing 'run'
     with pytest.raises(click.UsageError):
-        engine.RunConfig.validate_content(content)
+        engine.RunPlan.validate_content(content)
 
 
 def test_graph_build_unknown_dependency_raises_attribute_error():
@@ -56,7 +56,7 @@ def test_graph_build_unknown_dependency_raises_attribute_error():
         after: missing
     """
     f = io.StringIO(yaml)
-    graph = engine.Graph(engine.RunConfig.load_content(f))
+    graph = engine.Graph(engine.RunPlan.load_content(f))
     # build should raise because 'missing' dependency does not exist; current implementation
     # leads to an AttributeError when trying to access dep.name on None
     with pytest.raises(AttributeError):
@@ -78,7 +78,7 @@ def test_graph_cycle_detection_raises_valueerror():
         engine.Graph.from_file(f)
 
 
-def test_run_respects_dependencies_and_submits_successors_only_after_completion():
+def test_workflow_respects_dependencies_and_submits_successors_only_after_completion():
     yaml = """
     steps:
       a:
@@ -91,7 +91,7 @@ def test_run_respects_dependencies_and_submits_successors_only_after_completion(
         after: a
     """
     f = io.StringIO(yaml)
-    run = engine.Run.from_file(f)
+    workflow = engine.Workflow.from_file(f)
 
     records = []
     lock = threading.Lock()
@@ -106,7 +106,7 @@ def test_run_respects_dependencies_and_submits_successors_only_after_completion(
             records.append(("end", step.name, time.time()))
         return step.name
 
-    run.run(fn, max_workers=3)
+    workflow.run(fn, max_workers=3)
 
     # collect times
     starts = {}

@@ -139,10 +139,10 @@ class Graph(nx.DiGraph):
         if not nx.is_directed_acyclic_graph(self):
             raise ValueError("Graph contains one or more dependency cycles")
 
-class Run:
+
+class Workflow:
     def __init__(self, graph: Graph):
         self.graph = graph
-        self.threads = []
 
     @classmethod
     def from_file(cls, file):
