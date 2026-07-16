@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import click
 from .engine import Run, run_step
 
