@@ -58,14 +58,9 @@ class Step:
 
     @classmethod
     def run(cls, step: StepPlan):
-        wait_time = random.randint(1, 2)
-
         print(f"{datetime.now()} : START({step.name})")
         print(f"ansible_runner.interface.run(playbook={step.run})")
-        print(os.getcwd())
-        path = os.path.join(step.run_plan.path, step.run)
-        print(path)
-        ansible_runner.interface.run(playbook=path)
+        ansible_runner.interface.run(playbook=step.run)
         print(f"{datetime.now()} : END({step.name})")
 
 
@@ -181,6 +176,7 @@ class Workflow:
     def run(
         self,
         fn,
+        include_data: bool = True,
         max_workers: int = 5,
         thread_pool_initializer=None,
         thread_pool_initargs=None,
@@ -196,20 +192,20 @@ class Workflow:
             initializer=thread_pool_initializer,
             initargs=thread_pool_initargs,
         ) as executor:
-            for node_name in self.graph.nodes:
-                if self.graph.in_degree(node_name) == 0:
-                    node = self.graph.nodes[node_name]
-                    f = executor.submit(fn, *args, **kwargs, **node)
-                    future_to_step[f] = node_name
+            for node in self.graph.nodes:
+                if self.graph.in_degree(node) == 0:
+                    node_data = self.graph.nodes[node]
+                    f = executor.submit(fn, *args, **kwargs, **node_data)
+                    future_to_step[f] = node
 
             while future_to_step:
                 f = next(as_completed(future_to_step))
-                node_name = future_to_step.pop(f)
+                completed_node = future_to_step.pop(f)
 
-                for successor_name in self.graph.successors(node_name):
-                    remaining[successor_name] -= 1
+                for node in self.graph.successors(completed_node):
+                    remaining[node] -= 1
 
-                    if remaining[successor_name] == 0:
-                        successor = self.graph.nodes[successor_name]
-                        f = executor.submit(fn, *args, **kwargs, **successor)
-                        future_to_step[f] = successor_name
+                    if remaining[node] == 0:
+                        node_data = self.graph.nodes[node]
+                        f = executor.submit(fn, *args, **kwargs, **node_data)
+                        future_to_step[f] = node
