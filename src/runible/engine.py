@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ansible_runner
 import click
 import json
 import jsonschema
@@ -13,6 +14,7 @@ from runible.utilities import as_list
 from datetime import datetime
 import time
 import random
+import os
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -59,7 +61,11 @@ class Step:
         wait_time = random.randint(1, 2)
 
         print(f"{datetime.now()} : START({step.name})")
-        time.sleep(wait_time)
+        print(f"ansible_runner.interface.run(playbook={step.run})")
+        print(os.getcwd())
+        path = os.path.join(step.run_plan.path, step.run)
+        print(path)
+        ansible_runner.interface.run(playbook=path)
         print(f"{datetime.now()} : END({step.name})")
 
 
@@ -72,7 +78,14 @@ class RunPlan:
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
-    def __init__(self, vars: dict = {}, steps: dict = {}, *args, **kwargs):
+    def __init__(
+        self,
+        path: Path = Path(os.getcwd()),
+        vars: dict = {},
+        steps: dict = {},
+        *args, **kwargs
+    ):
+        self.path = path
         self.vars = vars
         self.steps = self.get_steps(steps)
 
@@ -92,7 +105,10 @@ class RunPlan:
         content = cls.load_content(file)
         cls.clean_content(content)
         cls.validate_content(content)
-        return cls(**content)
+        return cls(
+            path=Path(file.name),
+            **content
+        )
 
     @classmethod
     def load_content(cls, file):
