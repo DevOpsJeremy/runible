@@ -97,22 +97,22 @@ class RunPlan:
 
     @classmethod
     def from_file(cls, file):
-        content = cls.load_content(file)
-        cls.clean_content(content)
-        cls.validate_content(content)
+        plan = cls.load_plan(file)
+        cls.clean_plan(plan)
+        cls.validate_plan(plan)
         return cls(
             path=Path(file.name),
-            **content
+            **plan
         )
 
     @classmethod
-    def load_content(cls, file):
+    def load_plan(cls, file):
         return yaml.safe_load(file)
 
     @classmethod
-    def validate_content(cls, content):
+    def validate_plan(cls, plan):
         try:
-            jsonschema.validate(instance=content, schema=cls.SCHEMA)
+            jsonschema.validate(instance=plan, schema=cls.SCHEMA)
             return True
         except jsonschema.exceptions.ValidationError as e:
             path = e.json_path.removeprefix("$.")
@@ -120,14 +120,14 @@ class RunPlan:
             raise click.UsageError(msg) from e
 
     @classmethod
-    def clean_content(cls, content):
-        return_content = content.copy()
+    def clean_plan(cls, plan):
+        return_plan = plan.copy()
 
-        for step_name, step in content.get("steps", {}).items():
+        for step_name, step in plan.get("steps", {}).items():
             # Convert strings to list
             for key in ["when", "after"]:
                 try:
-                    return_content["steps"][step_name][key] = as_list(step[key])
+                    return_plan["steps"][step_name][key] = as_list(step[key])
                 except KeyError:
                     pass
 
