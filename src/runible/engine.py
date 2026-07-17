@@ -19,7 +19,7 @@ import os
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
-class StepPlan:
+class Step:
     def __init__(
         self,
         name: str,
@@ -27,6 +27,7 @@ class StepPlan:
         vars: dict = {},
         after: list = [],
         when: list = [],
+        context: Path = Path(os.getcwd()),
         *args,
         **kwargs,
     ):
@@ -48,23 +49,33 @@ class StepPlan:
         else:
             self.when = as_list(when)
 
+        self.context = context.resolve()
+
     def __str__(self):
-        return f"<StepPlan {self.name}>"
-
-
-class Step:
-    def __init__(self):
-        pass
+        return f"<Step {self.name}>"
 
     @classmethod
-    def run(cls, step: StepPlan):
-        print(f"{datetime.now()} : START({step.name})")
-        print(f"ansible_runner.interface.run(playbook={step.run})")
-        ansible_runner.interface.run(playbook=step.run)
-        print(f"{datetime.now()} : END({step.name})")
+    def find_path(cls, path, search_paths):
+        for search_path in search_paths:
+            find_path = Path(search_path).joinpath(path)
+            if find_path.exists():
+                return find_path
+
+    def _invoke(self, *args, **kwargs):
+        search_paths = [
+            self.context
+        ]
+
+        playbook_path = self.find_path(self.run, search_paths)
+
+        r = ansible_runner.interface.run(playbook=str(playbook_path))
+
+    @classmethod
+    def invoke(cls, step: Step, *args, **kwargs):
+        step._invoke(*args, **kwargs)
 
 
-class RunPlan:
+class Plan:
     """
     Builds a run configuration instance
     """
@@ -80,7 +91,10 @@ class RunPlan:
         steps: dict = {},
         *args, **kwargs
     ):
-        self.path = path
+        self.path = path.resolve()
+        print(f"Plan path: {self.path}")
+        self.context = self.path.parent
+        print(f"Plan context: {self.context}")
         self.vars = vars
         self.steps = self.get_steps(steps)
 
@@ -91,7 +105,7 @@ class RunPlan:
             if "vars" in step:
                 step["vars"] = self.vars | step["vars"]
 
-            step_set.add(StepPlan(name, **step))
+            step_set.add(Step(name, context=self.context, **step))
 
         return step_set
 
@@ -133,13 +147,13 @@ class RunPlan:
 
 
 class Graph(nx.DiGraph):
-    def __init__(self, config: RunPlan = None):
+    def __init__(self, config: Plan = None):
         super().__init__()
         self.config = config
 
     @classmethod
     def from_file(cls, file):
-        graph = cls(RunPlan.from_file(file))
+        graph = cls(Plan.from_file(file))
         graph.build()
         return graph
 
@@ -209,3 +223,4 @@ class Workflow:
                         node_data = self.graph.nodes[node]
                         f = executor.submit(fn, *args, **kwargs, **node_data)
                         future_to_step[f] = node
+
