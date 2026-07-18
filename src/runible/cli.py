@@ -13,4 +13,3 @@ def runible():
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
     Workflow.from_file(file).run(fn=Step.invoke)
-

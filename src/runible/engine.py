@@ -11,9 +11,6 @@ from pathlib import Path
 from runible.utilities import as_list
 
 # TODO: Delete
-from datetime import datetime
-import time
-import random
 import os
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
@@ -62,13 +59,11 @@ class Step:
                 return find_path
 
     def _invoke(self, *args, **kwargs):
-        search_paths = [
-            self.context
-        ]
+        search_paths = [self.context]
 
         playbook_path = self.find_path(self.run, search_paths)
 
-        r = ansible_runner.interface.run(playbook=str(playbook_path))
+        ansible_runner.interface.run(playbook=str(playbook_path))
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -89,7 +84,8 @@ class Plan:
         path: Path = Path(os.getcwd()),
         vars: dict = {},
         steps: dict = {},
-        *args, **kwargs
+        *args,
+        **kwargs,
     ):
         self.path = path.resolve()
         print(f"Plan path: {self.path}")
@@ -114,10 +110,7 @@ class Plan:
         plan = cls.load_plan(file)
         cls.clean_plan(plan)
         cls.validate_plan(plan)
-        return cls(
-            path=Path(file.name),
-            **plan
-        )
+        return cls(path=Path(file.name), **plan)
 
     @classmethod
     def load_plan(cls, file):
@@ -223,4 +216,3 @@ class Workflow:
                         node_data = self.graph.nodes[node]
                         f = executor.submit(fn, *args, **kwargs, **node_data)
                         future_to_step[f] = node
-
