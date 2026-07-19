@@ -1,6 +1,7 @@
 import io
 from runible import engine
 
+
 def test_workflow_run_order(capsys):
     yaml = """
     steps:
@@ -23,4 +24,3 @@ def test_workflow_run_order(capsys):
     captured = capsys.readouterr()
     assert captured.err == ""
     assert captured.out.splitlines() == ["c", "a", "b"]
-

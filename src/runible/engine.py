@@ -45,7 +45,6 @@ class Step:
         else:
             self.when = as_list(when)
 
-
     def __str__(self):
         return f"<Step {self.name}>"
 
