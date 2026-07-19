@@ -19,9 +19,9 @@ class Step:
         self,
         name: str,
         run: str,
-        vars: dict = {},
-        after: list = [],
-        when: list = [],
+        vars: dict | None = None,
+        after: list | None = None,
+        when: list | None = None,
         *args,
         **kwargs,
     ):
