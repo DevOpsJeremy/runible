@@ -111,8 +111,8 @@ class Plan:
     @classmethod
     def from_file(cls, file):
         plan = cls.load_plan(file)
-        plan = cls.clean_plan(plan)
         cls.validate_plan(plan)
+        plan = cls.clean_plan(plan)
         return cls(**plan)
 
     @classmethod
