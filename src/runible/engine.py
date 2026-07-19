@@ -85,15 +85,25 @@ class Plan:
         self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
-        step_set = set()
+        step_list = []
 
         for name, step in steps.items():
-            if "vars" in step:
-                step["vars"] = self.vars | step["vars"]
+            # Merge plan-level vars with step vars (step overrides plan vars)
+            merged_vars = {}
+            if self.vars:
+                merged_vars.update(self.vars)
 
-            step_set.add(Step(name, **step))
+            step_vars = step.get("vars")
+            if step_vars:
+                merged_vars.update(step_vars)
 
-        return step_set
+            step_copy = dict(step)
+            step_copy["vars"] = merged_vars
+            step_list.append(
+                Step(name, **step_copy)
+            )
+
+        return step_list
 
     @classmethod
     def from_file(cls, file):
