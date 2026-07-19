@@ -186,7 +186,7 @@ class Workflow:
         include_data: bool = True,
         max_workers: int = 5,
         thread_pool_initializer=None,
-        thread_pool_initargs=None,
+        thread_pool_initargs=(),
         *args,
         **kwargs,
     ):
