@@ -162,7 +162,7 @@ class Graph(nx.DiGraph):
         for step in self.config.steps:
             for dependency in step.after:
                 dep = next((d for d in self.config.steps if d.name == dependency), None)
-                if dep.name not in self:
+                if dep is None or dep.name not in self:
                     raise ValueError(
                         f"Unknown step '{dep.name}' referenced by '{step.name}'"
                     )
