@@ -10,7 +10,6 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
-from ansible.errors import AnsibleError
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -102,9 +101,7 @@ class Plan:
 
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
-            step_list.append(
-                Step(name, **step_copy)
-            )
+            step_list.append(Step(name, **step_copy))
 
         return step_list
 
