@@ -1,28 +1,26 @@
-import pytest
-import click
-from .engine import Run
-
-VALID_CONFIG = {
-    "vars": {"var1": "val1"},
-    "steps": {
-        "step1": {"run": "playbook1.yml", "vars": {"var2": "val2"}},
-        "step2": {"run": "playbook2.yml", "after": ["step1"]},
-        "step3": {
-            "run": "playbook3.yml",
-            "after": ["step1"],
-            "when": "step1 is failed",
-        },
-        "step4": {"run": "playbook4.yml", "after": ["step2", "step3"]},
-    },
-}
-
-INVALID_CONFIG = {"other_key": "other_value"}
+import io
+from runible import engine
 
 
-def test_valid_configuration():
-    Run.validate_config(VALID_CONFIG)
+def test_workflow_run_order(capsys):
+    yaml = """
+    steps:
+      a:
+        run: echo a
+        after: c
+      b:
+        run: echo b
+        after: a
+      c:
+        run: echo c
+    """
+    f = io.StringIO(yaml)
+    workflow = engine.Workflow(engine.Graph.from_file(f))
 
+    def fn(step, *args, **kwargs):
+        print(step.name)
 
-def test_invalid_configuration():
-    with pytest.raises(click.UsageError):
-        Run.validate_config(INVALID_CONFIG)
+    workflow.run(fn)
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    assert captured.out.splitlines() == ["c", "a", "b"]

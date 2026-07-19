@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 import click
-from .engine import Run
+from .engine import Workflow, Graph, Step
 
 
-@click.command(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
-@click.argument("file", type=click.File("r"), envvar="RUNIBLE_FILE")
-def runible(file):
-    Run(file).run()
+@click.group(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
+def runible():
+    pass
+
+
+@runible.command(name="run")
+@click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
+def run(file):
+    Workflow(Graph.from_file(file)).run(fn=Step.invoke)

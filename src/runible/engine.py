@@ -1,73 +1,216 @@
+from __future__ import annotations
+
+import ansible_runner
 import click
 import json
-import yaml
 import jsonschema
-from pathlib import Path
 import networkx as nx
-from .utilities import as_list
+import os
+import yaml
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from runible.utilities import as_list
+
+SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
-class Run:
+class Step:
+    def __init__(
+        self,
+        name: str,
+        run: str,
+        vars: dict | None = None,
+        after: list | None = None,
+        when: list | None = None,
+        *args,
+        **kwargs,
+    ):
+        self.name = name
+        self.run = run
+
+        if vars is None:
+            self.vars = {}
+        else:
+            self.vars = vars
+
+        if after is None:
+            self.after = []
+        else:
+            self.after = as_list(after)
+
+        if when is None:
+            self.when = []
+        else:
+            self.when = as_list(when)
+
+    def __str__(self):
+        return f"<Step {self.name}>"
+
+    @classmethod
+    def find_path(cls, path, search_paths):
+        for search_path in search_paths:
+            find_path = Path(search_path).joinpath(path)
+            if find_path.exists():
+                return find_path
+
+        return path
+
+    def _invoke(self, *args, **kwargs):
+        search_paths = [os.getcwd()]
+
+        playbook_path = self.find_path(self.run, search_paths)
+
+        ansible_runner.interface.run(playbook=str(playbook_path))
+
+    @classmethod
+    def invoke(cls, step: Step, *args, **kwargs):
+        step._invoke(*args, **kwargs)
+
+
+class Plan:
     """
-    Builds a run instance
+    Builds a run configuration instance
     """
 
-    SCHEMA_FILE = Path(__file__).resolve().parent / "schemas" / "run.schema.json"
+    SCHEMA_FILE = SCHEMA_DIR / "run.schema.json"
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
-    def __init__(self, file):
-        self.file = file
-        self.load_config()
-        self.validate_config(self.config)
-        self.workflow = self.build_workflow()
+    def __init__(
+        self,
+        vars: dict = {},
+        steps: dict = {},
+        *args,
+        **kwargs,
+    ):
+        self.vars = vars
+        self.steps = self.get_steps(steps)
 
-    def load_config(self):
-        self.config = yaml.safe_load(self.file)
+    def get_steps(self, steps: dict):
+        step_list = []
+
+        for name, step in steps.items():
+            # Merge plan-level vars with step vars (step overrides plan vars)
+            merged_vars = {}
+            if self.vars:
+                merged_vars.update(self.vars)
+
+            step_vars = step.get("vars")
+            if step_vars:
+                merged_vars.update(step_vars)
+
+            step_copy = dict(step)
+            step_copy["vars"] = merged_vars
+            step_list.append(Step(name, **step_copy))
+
+        return step_list
 
     @classmethod
-    def validate_config(cls, config):
+    def from_file(cls, file):
+        plan = cls.load_plan(file)
+        cls.validate_plan(plan)
+        plan = cls.clean_plan(plan)
+        return cls(**plan)
+
+    @classmethod
+    def load_plan(cls, file):
+        return yaml.safe_load(file)
+
+    @classmethod
+    def validate_plan(cls, plan):
         try:
-            jsonschema.validate(instance=config, schema=cls.SCHEMA)
+            jsonschema.validate(instance=plan, schema=cls.SCHEMA)
+            return True
         except jsonschema.exceptions.ValidationError as e:
             path = e.json_path.removeprefix("$.")
             msg = f"{e.message} (at {path})" if path else e.message
             raise click.UsageError(msg) from e
 
-    def build_workflow(self):
-        return Workflow(self.config)
+    @classmethod
+    def clean_plan(cls, plan):
+        return_plan = plan.copy()
 
-    def run(self):
-        print(self.workflow.graph.nodes(data=True))
-        print([i for i in dir(self.workflow.graph) if not i.startswith("_")])
+        for step_name, step in plan.get("steps", {}).items():
+            # Convert strings to list
+            for key in ["when", "after"]:
+                try:
+                    return_plan["steps"][step_name][key] = as_list(step[key])
+                except KeyError:
+                    pass
+
+        return return_plan
+
+
+class Graph(nx.DiGraph):
+    def __init__(self, config: Plan = None):
+        super().__init__()
+        self.config = config
+
+    @classmethod
+    def from_file(cls, file):
+        graph = cls(Plan.from_file(file))
+        graph.build()
+        return graph
+
+    def build(self):
+        if self.config is None or self.config.steps is None:
+            raise Exception("No steps found in configuration")
+
+        for step in self.config.steps:
+            self.add_node(step.name, step=step)
+
+        for step in self.config.steps:
+            for dependency in step.after:
+                dep = next((d for d in self.config.steps if d.name == dependency), None)
+                if dep is None or dep.name not in self:
+                    raise ValueError(
+                        f"Unknown step '{dep.name}' referenced by '{step.name}'"
+                    )
+
+                self.add_edge(dep.name, step.name)
+
+        if not nx.is_directed_acyclic_graph(self):
+            raise ValueError("Graph contains one or more dependency cycles")
 
 
 class Workflow:
-    def __init__(self, config: dict):
-        self.config = config
-        self.graph = self.build()
+    def __init__(self, graph: nx.DiGraph):
+        self.graph = graph
 
-    def build(self):
-        graph = nx.DiGraph()
+    def run(
+        self,
+        fn,
+        include_data: bool = True,
+        max_workers: int = 5,
+        thread_pool_initializer=None,
+        thread_pool_initargs=(),
+        *args,
+        **kwargs,
+    ):
+        remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
-        for step_name, step in self.config["steps"].items():
-            graph.add_node(
-                step_name,
-                run=step["run"],
-                vars=step.get("vars", {}),
-                when=step.get("when", []),
-            )
+        future_to_step = {}
 
-        for step_name, step in self.config["steps"].items():
-            for dependency in as_list(step.get("after", [])):
-                if dependency not in graph:
-                    raise ValueError(
-                        f"Unknown step '{dependency}' referenced by '{step_name}'"
-                    )
+        with ThreadPoolExecutor(
+            max_workers=max_workers,
+            initializer=thread_pool_initializer,
+            initargs=thread_pool_initargs,
+        ) as executor:
+            for node in self.graph.nodes:
+                if self.graph.in_degree(node) == 0:
+                    node_data = self.graph.nodes[node]
+                    f = executor.submit(fn, *args, **kwargs, **node_data)
+                    future_to_step[f] = node
 
-                graph.add_edge(dependency, step_name)
+            while future_to_step:
+                f = next(as_completed(future_to_step))
+                completed_node = future_to_step.pop(f)
+                f.result()
 
-        if not nx.is_directed_acyclic_graph(graph):
-            raise ValueError("Run contains one or more dependency cycles")
+                for node in self.graph.successors(completed_node):
+                    remaining[node] -= 1
 
-        return graph
+                    if remaining[node] == 0:
+                        node_data = self.graph.nodes[node]
+                        f = executor.submit(fn, *args, **kwargs, **node_data)
+                        future_to_step[f] = node

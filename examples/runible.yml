@@ -5,16 +5,24 @@ vars:
 
 steps:
   step1:
-    run: playbook1.yml
+    run: playbooks/playbook1.yml
     vars:
       var2: val2
   step2:
     after:
       - step1
-    run: playbook2.yml
+    run: playbooks/playbook2.yml
   step3:
     after:
       - step1
-    run: playbook3.yml
+    run: playbooks/playbook3.yml
+    vars:
+      var1: foo
     when:
       - step1 is failed
+  step4:
+    after:
+      - step2
+    run: playbooks/playbook4.yml
+  step5:
+    run: playbookasdfasdf.yml
