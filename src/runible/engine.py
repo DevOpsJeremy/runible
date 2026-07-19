@@ -10,6 +10,7 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
+from ansible.errors import AnsibleError
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -52,6 +53,8 @@ class Step:
             find_path = Path(search_path).joinpath(path)
             if find_path.exists():
                 return find_path
+
+        return path
 
     def _invoke(self, *args, **kwargs):
         search_paths = [os.getcwd()]
