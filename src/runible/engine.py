@@ -24,7 +24,6 @@ class Step:
         vars: dict = {},
         after: list = [],
         when: list = [],
-        context: Path = Path(os.getcwd()),
         *args,
         **kwargs,
     ):
@@ -46,7 +45,6 @@ class Step:
         else:
             self.when = as_list(when)
 
-        self.context = context.resolve()
 
     def __str__(self):
         return f"<Step {self.name}>"
@@ -59,7 +57,7 @@ class Step:
                 return find_path
 
     def _invoke(self, *args, **kwargs):
-        search_paths = [self.context]
+        search_paths = [os.getcwd()]
 
         playbook_path = self.find_path(self.run, search_paths)
 
@@ -81,16 +79,11 @@ class Plan:
 
     def __init__(
         self,
-        path: Path = Path(os.getcwd()),
         vars: dict = {},
         steps: dict = {},
         *args,
         **kwargs,
     ):
-        self.path = path.resolve()
-        print(f"Plan path: {self.path}")
-        self.context = self.path.parent
-        print(f"Plan context: {self.context}")
         self.vars = vars
         self.steps = self.get_steps(steps)
 
@@ -101,7 +94,7 @@ class Plan:
             if "vars" in step:
                 step["vars"] = self.vars | step["vars"]
 
-            step_set.add(Step(name, context=self.context, **step))
+            step_set.add(Step(name, **step))
 
         return step_set
 
@@ -110,7 +103,7 @@ class Plan:
         plan = cls.load_plan(file)
         cls.clean_plan(plan)
         cls.validate_plan(plan)
-        return cls(path=Path(file.name), **plan)
+        return cls(**plan)
 
     @classmethod
     def load_plan(cls, file):
@@ -172,13 +165,8 @@ class Graph(nx.DiGraph):
 
 
 class Workflow:
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: nx.DiGraph):
         self.graph = graph
-
-    @classmethod
-    def from_file(cls, file):
-        graph = Graph.from_file(file)
-        return cls(graph)
 
     def run(
         self,
