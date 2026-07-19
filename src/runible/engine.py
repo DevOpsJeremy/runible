@@ -5,13 +5,11 @@ import click
 import json
 import jsonschema
 import networkx as nx
+import os
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
-
-# TODO: Delete
-import os
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
