@@ -24,19 +24,4 @@ steps:
     after:
       - step2
     run: playbooks/playbook4.yml
-  step5:
-    run: playbooks/playbook5.yml
-  step6:
-    after:
-      - step5
-    run: playbooks/playbook6.yml
-  step7:
-    after:
-      - step1
-      - step4
-    run: playbooks/playbook7.yml
-  step8:
-    after:
-      - step7
-    run: playbooks/playbook8.yml
 
