@@ -108,7 +108,7 @@ class Plan:
     @classmethod
     def from_file(cls, file):
         plan = cls.load_plan(file)
-        cls.clean_plan(plan)
+        plan = cls.clean_plan(plan)
         cls.validate_plan(plan)
         return cls(**plan)
 
@@ -137,6 +137,8 @@ class Plan:
                     return_plan["steps"][step_name][key] = as_list(step[key])
                 except KeyError:
                     pass
+
+        return return_plan
 
 
 class Graph(nx.DiGraph):
