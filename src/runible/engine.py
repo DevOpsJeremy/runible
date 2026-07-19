@@ -22,6 +22,7 @@ class Step:
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
+        context: Path | None = None,
         *args,
         **kwargs,
     ):
@@ -42,6 +43,8 @@ class Step:
             self.when = []
         else:
             self.when = as_list(when)
+
+        self.context = context
 
     def __str__(self):
         return f"<Step {self.name}>"
@@ -80,11 +83,13 @@ class Plan:
         self,
         vars: dict = {},
         steps: dict = {},
+        context: Path | None = None,
         *args,
         **kwargs,
     ):
         self.vars = vars
         self.steps = self.get_steps(steps)
+        self.context = context
 
     def get_steps(self, steps: dict):
         step_list = []
@@ -108,6 +113,8 @@ class Plan:
     @classmethod
     def from_file(cls, file):
         plan = cls.load_plan(file)
+        if plan.get("context", None) is None and file.name is not None:
+            plan["context"] = Path(file.name)
         cls.validate_plan(plan)
         plan = cls.clean_plan(plan)
         return cls(**plan)
