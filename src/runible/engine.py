@@ -208,6 +208,7 @@ class Workflow:
             while future_to_step:
                 f = next(as_completed(future_to_step))
                 completed_node = future_to_step.pop(f)
+                f.result()
 
                 for node in self.graph.successors(completed_node):
                     remaining[node] -= 1
