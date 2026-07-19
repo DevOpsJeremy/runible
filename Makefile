@@ -49,10 +49,10 @@ lint-fix: pre-lint
 
 fix: format lint-fix
 
+TRASH_FILES := dist *junit.xml .*_cache __pycache__
 clean:
 	$(HEADER)
-	rm -rf dist
-	rm -f *junit.xml
+	@$(foreach f,$(TRASH_FILES),find . -name '$(f)' -exec rm -vrf {} +;)
 
 all: clean install test lint
 
