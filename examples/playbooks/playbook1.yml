@@ -2,4 +2,5 @@
   gather_facts: false
   tasks:
     - debug:
-        msg: Hello from playbook1.yml
+        var: '{{ item }}'
+      loop: [var1, var2]

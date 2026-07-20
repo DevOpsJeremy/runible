@@ -54,6 +54,8 @@ def test_search_paths(tmp_path, capsys):
     steps:
       step1:
         run: {playbook_name_invalid}
+        env:
+          ANSIBLE_NOCOLOR: true
     """
 
     plan_path_invalid.write_text(plan_content_invalid)

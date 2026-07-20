@@ -8,6 +8,8 @@ steps:
     run: playbooks/playbook1.yml
     vars:
       var2: val2
+    env:
+      ANSIBLE_NOCOLOR: true
   step2:
     after:
       - step1

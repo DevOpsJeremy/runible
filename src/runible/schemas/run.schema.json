@@ -2,7 +2,8 @@
   "type": "object",
   "properties": {
     "context": {"type": "string"},
-    "vars": {"type": "object"},
+    "vars": { "$ref": "#/$defs/vars" },
+    "env": { "$ref": "#/$defs/env" },
     "steps": {
       "type": "object",
       "patternProperties": {
@@ -10,7 +11,7 @@
           "type": "object",
           "properties": {
             "run": {"type": "string"},
-            "vars": {"type": "object"},
+            "vars": { "$ref": "#/$defs/vars" },
             "after": {
               "anyOf": [
                 {"type": "string"},
@@ -29,10 +30,7 @@
                 }
               ]
             },
-            "env": {
-              "type": "object",
-              "additionalProperties": true
-            }
+            "env": { "$ref": "#/$defs/env" }
           },
           "required": ["run"],
           "additionalProperties": false
@@ -41,5 +39,15 @@
     }
   },
   "required": ["steps"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "env": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "vars": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
 }

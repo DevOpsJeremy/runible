@@ -93,20 +93,70 @@ class Plan:
     SCHEMA_FILE = SCHEMA_DIR / "run.schema.json"
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
-
     def __init__(
         self,
-        vars: dict = {},
-        steps: dict = {},
+        name: str,
+        run: str,
+        vars: dict | None = None,
+        after: list | None = None,
+        when: list | None = None,
+        env: dict | None = None,
         context: Path | None = None,
         *args,
         **kwargs,
     ):
-        self.vars = vars
+        self.name = name
+        self.run = run
+
+        if vars is None:
+            self.vars = {}
+        else:
+            self.vars = vars
+
+        if env is None:
+            self.env = {}
+        else:
+            self.env = env
+
+        if after is None:
+            self.after = []
+        else:
+            self.after = as_list(after)
+
+        if when is None:
+            self.when = []
+        else:
+            self.when = as_list(when)
+
+        self.context = context
+
+
+    def __init__(
+        self,
+        env: dict | None = None,
+        vars: dict | None = None,
+        steps: dict | None = None,
+        context: Path | None = None,
+        *args,
+        **kwargs,
+    ):
+        if vars is None:
+            self.vars = {}
+        else:
+            self.vars = vars
+
+        if env is None:
+            self.env = {}
+        else:
+            self.env = env
+
         self.context = context
         self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
+        if steps is None:
+            return
+
         step_list = []
 
         for name, step in steps.items():
@@ -119,8 +169,19 @@ class Plan:
             if step_vars:
                 merged_vars.update(step_vars)
 
+            # Merge plan-level env vars with step env vars (step overrides plan env vars)
+            merged_env = {}
+            if self.env:
+                merged_env.update(self.env)
+
+            step_env = step.get("env")
+            if step_env:
+                merged_env.update(step_env)
+
+ 
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
+            step_copy["env"] = merged_env
             step_list.append(Step(name, context=self.context, **step_copy))
 
         return step_list
