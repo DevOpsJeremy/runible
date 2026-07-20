@@ -59,10 +59,7 @@ class Step:
         return path
 
     def _invoke(self, *args, **kwargs):
-        search_paths = [
-            self.context,
-            os.getcwd()
-        ]
+        search_paths = [self.context, os.getcwd()]
 
         playbook_path = self.find_path(self.run, search_paths)
 
