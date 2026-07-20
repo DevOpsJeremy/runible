@@ -69,14 +69,16 @@ class Step:
 
         playbook_path = self.find_path(self.run, search_paths)
 
-        runner_kwargs = {}
+        runner_kwargs = {
+            "playbook": str(playbook_path)
+        }
         if self.env is not None:
             runner_kwargs["envvars"] = self.env
 
         if self.vars is not None:
             runner_kwargs["extravars"] = self.vars
 
-        ansible_runner.interface.run(playbook=str(playbook_path), **runner_kwargs)
+        ansible_runner.interface.run(**runner_kwargs)
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
