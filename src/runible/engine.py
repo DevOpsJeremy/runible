@@ -22,6 +22,7 @@ class Step:
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
+        env: dict | None = None,
         context: Path | None = None,
         *args,
         **kwargs,
@@ -33,6 +34,11 @@ class Step:
             self.vars = {}
         else:
             self.vars = vars
+
+        if env is None:
+            self.env = {}
+        else:
+            self.env = env
 
         if after is None:
             self.after = []
@@ -63,7 +69,14 @@ class Step:
 
         playbook_path = self.find_path(self.run, search_paths)
 
-        ansible_runner.interface.run(playbook=str(playbook_path))
+        runner_kwargs = {}
+        if self.env is not None:
+            runner_kwargs["envvars"] = self.env
+
+        if self.vars is not None:
+            runner_kwargs["extravars"] = self.vars
+
+        ansible_runner.interface.run(playbook=str(playbook_path), **runner_kwargs)
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):

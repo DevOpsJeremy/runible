@@ -28,6 +28,10 @@
                   "items": {"type": "string"}
                 }
               ]
+            },
+            "env": {
+              "type": "object",
+              "additionalProperties": true
             }
           },
           "required": ["run"],
