@@ -1,6 +1,7 @@
 {
   "type": "object",
   "properties": {
+    "context": {"type": "string"},
     "vars": {"type": "object"},
     "steps": {
       "type": "object",

@@ -59,7 +59,10 @@ class Step:
         return path
 
     def _invoke(self, *args, **kwargs):
-        search_paths = [os.getcwd()]
+        search_paths = [
+            self.context,
+            os.getcwd()
+        ]
 
         playbook_path = self.find_path(self.run, search_paths)
 
@@ -88,8 +91,8 @@ class Plan:
         **kwargs,
     ):
         self.vars = vars
-        self.steps = self.get_steps(steps)
         self.context = context
+        self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
         step_list = []
@@ -106,16 +109,16 @@ class Plan:
 
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
-            step_list.append(Step(name, **step_copy))
+            step_list.append(Step(name, context=self.context, **step_copy))
 
         return step_list
 
     @classmethod
     def from_file(cls, file):
         plan = cls.load_plan(file)
-        if plan.get("context", None) is None and file.name is not None:
-            plan["context"] = Path(file.name)
         cls.validate_plan(plan)
+        if plan.get("context", None) is None and file.name is not None:
+            plan["context"] = Path(file.name).resolve().parent
         plan = cls.clean_plan(plan)
         return cls(**plan)
 
