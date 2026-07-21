@@ -1,10 +1,6 @@
 {
   "type": "object",
   "properties": {
-<<<<<<< HEAD
-    "context": {"type": "string"},
-=======
->>>>>>> origin
     "vars": { "$ref": "#/$defs/vars" },
     "env": { "$ref": "#/$defs/env" },
     "steps": {
@@ -15,10 +11,7 @@
           "properties": {
             "run": {"type": "string"},
             "vars": { "$ref": "#/$defs/vars" },
-<<<<<<< HEAD
-=======
             "env": { "$ref": "#/$defs/env" },
->>>>>>> origin
             "after": {
               "anyOf": [
                 {"type": "string"},
@@ -36,8 +29,7 @@
                   "items": {"type": "string"}
                 }
               ]
-            },
-            "env": { "$ref": "#/$defs/env" }
+            }
           },
           "required": ["run"],
           "additionalProperties": false
