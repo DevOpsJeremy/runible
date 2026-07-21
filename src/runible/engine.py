@@ -93,43 +93,6 @@ class Plan:
     SCHEMA_FILE = SCHEMA_DIR / "run.schema.json"
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
-    def __init__(
-        self,
-        name: str,
-        run: str,
-        vars: dict | None = None,
-        after: list | None = None,
-        when: list | None = None,
-        env: dict | None = None,
-        context: Path | None = None,
-        *args,
-        **kwargs,
-    ):
-        self.name = name
-        self.run = run
-
-        if vars is None:
-            self.vars = {}
-        else:
-            self.vars = vars
-
-        if env is None:
-            self.env = {}
-        else:
-            self.env = env
-
-        if after is None:
-            self.after = []
-        else:
-            self.after = as_list(after)
-
-        if when is None:
-            self.when = []
-        else:
-            self.when = as_list(when)
-
-        self.context = context
-
 
     def __init__(
         self,
