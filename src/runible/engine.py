@@ -64,7 +64,7 @@ class Step:
     def _invoke(self, *args, **kwargs):
         search_paths = [os.getcwd()]
 
-        playbook_path = self.find_path(self.run, search_paths)
+        playbook_path = str(self.find_path(self.run, search_paths))
 
         _invoked_kwargs = {"playbook": playbook_path}
         if self.env is not None:
