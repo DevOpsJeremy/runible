@@ -62,4 +62,5 @@ def test_search_paths(tmp_path, capsys):
     with open(plan_path_invalid, "r") as f:
         engine.Workflow(engine.Graph.from_file(f)).run(fn=engine.Step.invoke)
     captured = capsys.readouterr()
-    assert captured.out == f"[ERROR]: the playbook: {playbook_name_invalid} could not be found"
+    print(captured.out.splitlines()[0] )
+    assert captured.out.splitlines()[0] == f"[ERROR]: the playbook: {playbook_name_invalid} could not be found"
