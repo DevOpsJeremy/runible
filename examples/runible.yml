@@ -3,6 +3,9 @@
 vars:
   var1: val1
 
+env:
+  ANSIBLE_FORKS: 15
+
 steps:
   step1:
     run: playbooks/playbook1.yml
