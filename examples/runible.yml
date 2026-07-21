@@ -3,11 +3,16 @@
 vars:
   var1: val1
 
+env:
+  ANSIBLE_FORKS: 15
+
 steps:
   step1:
     run: playbooks/playbook1.yml
     vars:
       var2: val2
+    env:
+      ANSIBLE_NOCOLOR: true
   step2:
     after:
       - step1
@@ -24,5 +29,4 @@ steps:
     after:
       - step2
     run: playbooks/playbook4.yml
-  step5:
-    run: playbookasdfasdf.yml
+

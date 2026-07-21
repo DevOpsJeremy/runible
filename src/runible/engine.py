@@ -22,6 +22,7 @@ class Step:
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
+        env: dict | None = None,
         *args,
         **kwargs,
     ):
@@ -32,6 +33,11 @@ class Step:
             self.vars = {}
         else:
             self.vars = vars
+
+        if env is None:
+            self.env = {}
+        else:
+            self.env = env
 
         if after is None:
             self.after = []
@@ -58,9 +64,16 @@ class Step:
     def _invoke(self, *args, **kwargs):
         search_paths = [os.getcwd()]
 
-        playbook_path = self.find_path(self.run, search_paths)
+        playbook_path = str(self.find_path(self.run, search_paths))
 
-        ansible_runner.interface.run(playbook=str(playbook_path))
+        _invoked_kwargs = {"playbook": playbook_path}
+        if self.env is not None:
+            _invoked_kwargs["envvars"] = self.env
+
+        if self.vars is not None:
+            _invoked_kwargs["extravars"] = self.vars
+
+        ansible_runner.interface.run(**_invoked_kwargs)
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -78,12 +91,14 @@ class Plan:
 
     def __init__(
         self,
+        env: dict = {},
         vars: dict = {},
         steps: dict = {},
         *args,
         **kwargs,
     ):
         self.vars = vars
+        self.env = env
         self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
@@ -99,8 +114,18 @@ class Plan:
             if step_vars:
                 merged_vars.update(step_vars)
 
+            # Merge plan-level env vars with step env vars (step overrides plan env vars)
+            merged_env = {}
+            if self.env:
+                merged_env.update(self.env)
+
+            step_env = step.get("env")
+            if step_env:
+                merged_env.update(step_env)
+
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
+            step_copy["env"] = merged_env
             step_list.append(Step(name, **step_copy))
 
         return step_list
