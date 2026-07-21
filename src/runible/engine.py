@@ -105,10 +105,10 @@ class Plan:
         self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
-        if steps is None:
-            return
-
         step_list = []
+
+        if steps is None:
+            return step_list
 
         for name, step in steps.items():
             # Merge plan-level vars with step vars (step overrides plan vars)
