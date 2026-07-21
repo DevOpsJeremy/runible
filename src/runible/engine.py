@@ -5,7 +5,6 @@ import click
 import json
 import jsonschema
 import networkx as nx
-import os
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -55,23 +54,15 @@ class Step:
     def __str__(self):
         return f"<Step {self.name}>"
 
-    def _invoke(
-        self,
-        *args, **kwargs
-    ):
-        _invoked_kwargs = {
-            "project_dir": str(self.context),
-            "playbook": str(self.run)
-        }
+    def _invoke(self, *args, **kwargs):
+        _invoked_kwargs = {"project_dir": str(self.context), "playbook": str(self.run)}
         if self.env is not None:
             _invoked_kwargs["envvars"] = self.env
 
         if self.vars is not None:
             _invoked_kwargs["extravars"] = self.vars
 
-        ansible_runner.interface.run(
-            **_invoked_kwargs
-        )
+        ansible_runner.interface.run(**_invoked_kwargs)
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -134,7 +125,6 @@ class Plan:
             if step_env:
                 merged_env.update(step_env)
 
- 
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env

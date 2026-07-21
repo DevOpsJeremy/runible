@@ -1,4 +1,3 @@
-import io
 from runible import engine
 
 
@@ -26,4 +25,3 @@ def test_workflow_run_order(tmp_path, capsys):
     captured = capsys.readouterr()
     assert captured.err == ""
     assert captured.out.splitlines() == ["c", "a", "b"]
-
