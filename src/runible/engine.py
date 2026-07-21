@@ -140,7 +140,10 @@ class Plan:
     def from_file(cls, file):
         plan = cls.load_plan(file)
         cls.validate_plan(plan)
-        if plan.get("context", None) is None and getattr(file, "name", None) is not None:
+        if (
+            plan.get("context", None) is None
+            and getattr(file, "name", None) is not None
+        ):
             plan["context"] = Path(file.name).resolve().parent
         plan = cls.clean_plan(plan)
         return cls(**plan)
