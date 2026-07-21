@@ -1,8 +1,7 @@
-import io
 from runible import engine
 
 
-def test_workflow_run_order(capsys):
+def test_workflow_run_order(tmp_path, capsys):
     yaml = """
     steps:
       a:
@@ -14,8 +13,10 @@ def test_workflow_run_order(capsys):
       c:
         run: echo c
     """
-    f = io.StringIO(yaml)
-    workflow = engine.Workflow(engine.Graph.from_file(f))
+    plan_path = tmp_path / "tmp_plan.yml"
+    plan_path.write_text(yaml)
+    with open(plan_path, "r") as f:
+        workflow = engine.Workflow(engine.Graph.from_file(f))
 
     def fn(step, *args, **kwargs):
         print(step.name)

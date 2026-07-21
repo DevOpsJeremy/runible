@@ -5,7 +5,6 @@ import click
 import json
 import jsonschema
 import networkx as nx
-import os
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -23,6 +22,7 @@ class Step:
         after: list | None = None,
         when: list | None = None,
         env: dict | None = None,
+        context: Path | None = None,
         *args,
         **kwargs,
     ):
@@ -49,24 +49,17 @@ class Step:
         else:
             self.when = as_list(when)
 
+        self.context = context
+
     def __str__(self):
         return f"<Step {self.name}>"
 
-    @classmethod
-    def find_path(cls, path, search_paths):
-        for search_path in search_paths:
-            find_path = Path(search_path).joinpath(path)
-            if find_path.exists():
-                return find_path
-
-        return path
-
     def _invoke(self, *args, **kwargs):
-        search_paths = [os.getcwd()]
+        _invoked_kwargs = {"playbook": str(self.run)}
 
-        playbook_path = str(self.find_path(self.run, search_paths))
+        if self.context is not None:
+            _invoked_kwargs["project_dir"] = str(self.context)
 
-        _invoked_kwargs = {"playbook": playbook_path}
         if self.env is not None:
             _invoked_kwargs["envvars"] = self.env
 
@@ -91,18 +84,31 @@ class Plan:
 
     def __init__(
         self,
-        env: dict = {},
-        vars: dict = {},
-        steps: dict = {},
+        env: dict | None = None,
+        vars: dict | None = None,
+        steps: dict | None = None,
+        context: Path | None = None,
         *args,
         **kwargs,
     ):
-        self.vars = vars
-        self.env = env
+        if vars is None:
+            self.vars = {}
+        else:
+            self.vars = vars
+
+        if env is None:
+            self.env = {}
+        else:
+            self.env = env
+
+        self.context = context
         self.steps = self.get_steps(steps)
 
     def get_steps(self, steps: dict):
         step_list = []
+
+        if steps is None:
+            return step_list
 
         for name, step in steps.items():
             # Merge plan-level vars with step vars (step overrides plan vars)
@@ -126,7 +132,7 @@ class Plan:
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
-            step_list.append(Step(name, **step_copy))
+            step_list.append(Step(name, context=self.context, **step_copy))
 
         return step_list
 
@@ -134,6 +140,11 @@ class Plan:
     def from_file(cls, file):
         plan = cls.load_plan(file)
         cls.validate_plan(plan)
+        if (
+            plan.get("context", None) is None
+            and getattr(file, "name", None) is not None
+        ):
+            plan["context"] = Path(file.name).resolve().parent
         plan = cls.clean_plan(plan)
         return cls(**plan)
 
