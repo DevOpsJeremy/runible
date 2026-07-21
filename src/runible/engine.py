@@ -55,37 +55,23 @@ class Step:
     def __str__(self):
         return f"<Step {self.name}>"
 
-    @classmethod
-    def find_path(cls, path, search_paths):
-        for search_path in search_paths:
-            find_path = Path(search_path).joinpath(path)
-            if find_path.exists():
-                return find_path
-
-        return path
-
     def _invoke(
         self,
-        runner_kwargs: dict | None = None,
         *args, **kwargs
     ):
-        search_paths = [self.context, os.getcwd()]
-
-        playbook_path = self.find_path(self.run, search_paths)
-
         _invoked_kwargs = {
-            "playbook": str(playbook_path)
+            "project_dir": str(self.context),
+            "playbook": str(self.run)
         }
         if self.env is not None:
             _invoked_kwargs["envvars"] = self.env
 
-        if runner_kwargs is None:
-            runner_kwargs = {}
-
         if self.vars is not None:
             _invoked_kwargs["extravars"] = self.vars
 
-        ansible_runner.interface.run(**runner_kwargs, **_invoked_kwargs)
+        ansible_runner.interface.run(
+            **_invoked_kwargs
+        )
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
