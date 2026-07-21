@@ -55,7 +55,11 @@ class Step:
         return f"<Step {self.name}>"
 
     def _invoke(self, *args, **kwargs):
-        _invoked_kwargs = {"project_dir": str(self.context), "playbook": str(self.run)}
+        _invoked_kwargs = {"playbook": str(self.run)}
+
+        if self.context is not None:
+            _invoked_kwargs["project_dir"] = str(self.context)
+
         if self.env is not None:
             _invoked_kwargs["envvars"] = self.env
 
