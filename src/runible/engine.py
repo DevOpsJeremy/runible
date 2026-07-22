@@ -6,6 +6,7 @@ import json
 import jsonschema
 import networkx as nx
 import yaml
+from blinker import Signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
@@ -14,6 +15,8 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
 class Step:
+    signaler = Signal()
+
     def __init__(
         self,
         name: str,
@@ -55,18 +58,20 @@ class Step:
         return f"<Step {self.name}>"
 
     def _invoke(self, *args, **kwargs):
-        _invoked_kwargs = {"playbook": str(self.run)}
+        _invoke_kwargs = {"playbook": str(self.run)}
 
         if self.context is not None:
-            _invoked_kwargs["project_dir"] = str(self.context)
+            _invoke_kwargs["project_dir"] = str(self.context)
 
         if self.env is not None:
-            _invoked_kwargs["envvars"] = self.env
+            _invoke_kwargs["envvars"] = self.env
 
         if self.vars is not None:
-            _invoked_kwargs["extravars"] = self.vars
+            _invoke_kwargs["extravars"] = self.vars
 
-        ansible_runner.interface.run(**_invoked_kwargs)
+        self.signaler.send('start')
+        ansible_runner.interface.run(**_invoke_kwargs)
+        self.signaler.send('finish')
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):

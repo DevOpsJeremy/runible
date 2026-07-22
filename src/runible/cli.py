@@ -12,4 +12,9 @@ def runible():
 @runible.command(name="run")
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
+    def print_status(*args, **kargs):
+        print(args)
+        print(kwargs)
+
+    s = signal()
     Workflow(Graph.from_file(file)).run(fn=Step.invoke)
