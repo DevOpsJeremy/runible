@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import click
 from .engine import Workflow, Graph, Step
+# TODO remove
+from blinker import signal
 
 
 @click.group(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
