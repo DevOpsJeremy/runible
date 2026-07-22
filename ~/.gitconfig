@@ -1,0 +1,8 @@
+[core]
+    autoCrlf = false
+
+[credential]
+    helper = store
+
+[merge]
+    ff = False

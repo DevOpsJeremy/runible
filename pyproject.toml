@@ -36,6 +36,9 @@ Changelog = "https://github.com/DevOpsJeremy/runible/blob/main/CHANGELOG.md"
 [project.scripts]
 runible = "runible.cli:runible"
 
+[project.entry-points."runible"]
+default = "plugins.default"
+
 [tool.hatch.version]
 path = "src/runible/__init__.py"
 
@@ -43,10 +46,10 @@ path = "src/runible/__init__.py"
 sources = ["src"]
 
 [tool.hatch.build.targets.wheel]
-include = ["runible"]
+include = ["runible", "plugins"]
 
 [tool.hatch.build.targets.sdist]
-include = ["runible", "/requirements.txt"]
+include = ["runible", "plugins", "/requirements.txt"]
 
 [tool.hatch.metadata.hooks.requirements_txt]
 filename = "requirements.txt"

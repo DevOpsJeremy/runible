@@ -6,16 +6,16 @@ import json
 import jsonschema
 import networkx as nx
 import yaml
-from blinker import Signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
+from runible.interface import Interface
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
 class Step:
-    signaler = Signal()
+    interface = Interface()
 
     def __init__(
         self,
