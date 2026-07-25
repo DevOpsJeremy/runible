@@ -72,7 +72,7 @@ class Step:
         if self.vars is not None:
             _invoke_kwargs["extravars"] = self.vars
 
-        self.interface.signaler.send('start')
+        self.signal('start')
         a = ansible_runner.interface.run_async(**_invoke_kwargs)
         print(a)
         print([d for d in dir(a[0]) if not d.startswith("_")])
@@ -86,11 +86,14 @@ class Step:
             print(a[1].stats)
             print("--- status ---")
             print(a[1].status)
-        self.interface.signaler.send('finish')
+        self.signal('finish')
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
         step._invoke(*args, **kwargs)
+
+    def signal(self, sender: str):
+        self.interface.signaler.send(sender)
 
 
 class Plan:
