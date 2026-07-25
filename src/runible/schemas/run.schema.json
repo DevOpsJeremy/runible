@@ -3,6 +3,9 @@
   "properties": {
     "vars": { "$ref": "#/$defs/vars" },
     "env": { "$ref": "#/$defs/env" },
+    "interface": {
+      "type": "string"
+    },
     "steps": {
       "type": "object",
       "patternProperties": {

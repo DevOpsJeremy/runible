@@ -9,16 +9,13 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
-from runible.interface import Interface
-
-# TODO: Remove
+from runible.plugins.default import DefaultInterface
+from importlib.metadata import entry_points
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
 class Step:
-    interface = Interface()
-
     def __init__(
         self,
         name: str,
@@ -27,12 +24,7 @@ class Step:
         after: list | None = None,
         when: list | None = None,
         env: dict | None = None,
-        context: Path | None = None,
-        event_handler = None,
-        cancel_callback = None,
-        finished_callback = None,
-        status_handler = None,
-        artifacts_handler = None,
+        plan: Plan | None = None,
         *args,
         **kwargs,
     ):
@@ -59,54 +51,35 @@ class Step:
         else:
             self.when = as_list(when)
 
-        if event_handler is None:
-            self.event_handler = self.default_event_handler
-        else:
-            self.event_handler = event_handler
-
-        if cancel_callback is None:
-            self.cancel_callback = self.default_cancel_callback
-        else:
-            self.cancel_callback = cancel_callback
-
-        if finished_callback is None:
-            self.finished_callback = self.default_finished_callback
-        else:
-            self.finished_callback = finished_callback
-
-        if status_handler is None:
-            self.status_handler = self.default_status_handler
-        else:
-            self.status_handler = status_handler
-
-        if artifacts_handler is None:
-            self.artifacts_handler = self.default_artifacts_handler
-        else:
-            self.artifacts_handler = artifacts_handler
-
-        self.context = context
+        self.plan = plan
         self.thread = None
         self.runner = None
 
     def __str__(self):
         return f"<Step {self.name}>"
 
-    def _invoke(self, *args, **kwargs):
-        _invoke_kwargs = {"playbook": str(self.run)}
+    def get_context(self):
+        return self.plan.context
 
-        if self.context is not None:
-            _invoke_kwargs["project_dir"] = str(self.context)
+    def get_interface(self):
+        return self.plan.interface
+
+    def _invoke(self, *args, **kwargs):
+        interface = self.get_interface()
+        invoke_kwargs = {"playbook": str(self.run), **interface.get_handlers()}
+
+        context = self.get_context()
+        if context is not None:
+            invoke_kwargs["project_dir"] = str(context)
 
         if self.env is not None:
-            _invoke_kwargs["envvars"] = self.env
+            invoke_kwargs["envvars"] = self.env
 
         if self.vars is not None:
-            _invoke_kwargs["extravars"] = self.vars
+            invoke_kwargs["extravars"] = self.vars
 
         self.signal("start")
-        a = ansible_runner.interface.run_async(
-            quiet=True, event_handler=self.invoke_event_handler, **_invoke_kwargs
-        )
+        a = ansible_runner.interface.run_async(**invoke_kwargs)
         self.thread = a[0]
         self.runner = a[1]
         self.signal("finish")
@@ -116,44 +89,7 @@ class Step:
         step._invoke(*args, **kwargs)
 
     def signal(self, sender: str):
-        self.interface.signaler.send(sender)
-
-    def invoke_event_handler(self, *args, **kwargs):
-        self.signal("event")
-        self.event_handler(*args, **kwargs)
-
-    def default_event_handler(self, event_data):
-        print(event_data)
-        return True
-
-    def invoke_cancel_callback(self, *args, **kwargs):
-        self.signal("cancel")
-        self.cancel_callback(*args, **kwargs)
-
-    def default_cancel_callback(self):
-        return False
-
-    def invoke_finished_callback(self, *args, **kwargs):
-        self.signal("finished")
-        self.finished_callback(*args, **kwargs)
-
-    def default_finished_callback(self, *args, **kwargs):
-        print(f"args: {args}, kwargs: {kwargs}")
-        pass
-
-    def invoke_status_handler(self, *args, **kwargs):
-        self.signal("status")
-        self.status_handler(*args, **kwargs)
-
-    def default_status_handler(self, status_data, runner_config):
-        pass
-
-    def invoke_artifacts_handler(self, *args, **kwargs):
-        self.signal("artifacts")
-        self.artifacts_handler(*args, **kwargs)
-
-    def default_artifacts_handler(self, artifact_dir):
-        pass
+        self.get_interface().signaler.send(sender)
 
 
 class Plan:
@@ -165,11 +101,14 @@ class Plan:
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
+    entry_group = "runible"
+
     def __init__(
         self,
         env: dict | None = None,
         vars: dict | None = None,
         steps: dict | None = None,
+        interface: str = "default",
         context: Path | None = None,
         *args,
         **kwargs,
@@ -184,8 +123,23 @@ class Plan:
         else:
             self.env = env
 
+        self.interface = self.get_interface(interface)()
         self.context = context
         self.steps = self.get_steps(steps)
+
+    def get_interface(self, name: str):
+        if name == "default":
+            return DefaultInterface
+
+        interface_plugins = [
+            i for i in entry_points(group=self.entry_group) if i.name == name
+        ]
+        if len(interface_plugins) == 0:
+            raise click.UsageError(
+                f"The {self.entry_group} plugin '{name}' was not found"
+            )
+
+        return interface_plugins[0].load()
 
     def get_steps(self, steps: dict):
         step_list = []
@@ -215,7 +169,7 @@ class Plan:
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
-            step_list.append(Step(name, context=self.context, **step_copy))
+            step_list.append(Step(name, plan=self, **step_copy))
 
         return step_list
 
