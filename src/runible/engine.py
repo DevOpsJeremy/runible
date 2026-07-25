@@ -12,7 +12,6 @@ from runible.utilities import as_list
 from runible.interface import Interface
 
 # TODO: Remove
-from ansible_runner.exceptions import AnsibleRunnerException
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -29,11 +28,11 @@ class Step:
         when: list | None = None,
         env: dict | None = None,
         context: Path | None = None,
-        event_handler: Callable = None,
-        cancel_callback: Callable = None,
-        finished_callback: Callable = None,
-        status_handler: Callable = None,
-        artifacts_handler: Callable = None,
+        event_handler=None,
+        cancel_callback=None,
+        finished_callback=None,
+        status_handler=None,
+        artifacts_handler=None,
         *args,
         **kwargs,
     ):
@@ -104,28 +103,13 @@ class Step:
         if self.vars is not None:
             _invoke_kwargs["extravars"] = self.vars
 
-        self.signal('start')
+        self.signal("start")
         a = ansible_runner.interface.run_async(
             quiet=True, event_handler=self.invoke_event_handler, **_invoke_kwargs
         )
         self.thread = a[0]
         self.runner = a[1]
-        #print(a)
-        #print([d for d in dir(a[0]) if not d.startswith("_")])
-        #print([d for d in dir(a[1]) if not d.startswith("_")])
-        #while a[0].is_alive():
-            #print("--- events ---")
-            #print(a[1].events)
-            #print([d for d in dir(a[1].events) if not d.startswith("_")])
-            #for i in a[1].events:
-                #print(f"STDOUT: {i['stdout']}")
-            #print("--- last_stdout_update ---")
-            #print(a[1].last_stdout_update)
-            #print("--- stats ---")
-            #print(a[1].stats)
-            #print("--- status ---")
-            #print(a[1].status)
-        self.signal('finish')
+        self.signal("finish")
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -135,7 +119,7 @@ class Step:
         self.interface.signaler.send(sender)
 
     def invoke_event_handler(self, *args, **kwargs):
-        self.signal('event')
+        self.signal("event")
         self.event_handler(*args, **kwargs)
 
     def default_event_handler(self, event_data):
@@ -143,14 +127,14 @@ class Step:
         return True
 
     def invoke_cancel_callback(self, *args, **kwargs):
-        self.signal('cancel')
+        self.signal("cancel")
         self.cancel_callback(*args, **kwargs)
 
     def default_cancel_callback(self):
         return False
 
     def invoke_finished_callback(self, *args, **kwargs):
-        self.signal('finished')
+        self.signal("finished")
         self.finished_callback(*args, **kwargs)
 
     def default_finished_callback(self, *args, **kwargs):
@@ -158,14 +142,14 @@ class Step:
         pass
 
     def invoke_status_handler(self, *args, **kwargs):
-        self.signal('status')
+        self.signal("status")
         self.status_handler(*args, **kwargs)
 
     def default_status_handler(self, status_data, runner_config):
         pass
 
     def invoke_artifacts_handler(self, *args, **kwargs):
-        self.signal('artifacts')
+        self.signal("artifacts")
         self.artifacts_handler(*args, **kwargs)
 
     def default_artifacts_handler(self, artifact_dir):

@@ -1,6 +1,6 @@
 from blinker import Signal
-from importlib import import_module
 from importlib.metadata import entry_points
+
 
 class Interface:
     entry_group = "runible"
@@ -13,8 +13,7 @@ class Interface:
         plugins = entry_points(group=self.entry_group)
         for ep in plugins:
             print(ep)
-            print([d for d in dir(ep) if not d.startswith('_')])
-            l = ep.load()
-            print(l)
-            l()
-
+            print([d for d in dir(ep) if not d.startswith("_")])
+            entrypoint_fn = ep.load()
+            print(entrypoint_fn)
+            entrypoint_fn()
