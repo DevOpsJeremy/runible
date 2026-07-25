@@ -56,6 +56,13 @@ class Step:
             self.when = as_list(when)
 
         self.context = context
+        self.thread = None
+        self.runner = None
+        self.event_handler = self.default_event_handler
+        self.cancel_callback = self.default_cancel_callback
+        self.finished_callback = self.default_finished_callback
+        self.status_handler = self.default_status_handler
+        self.artifacts_handler = self.default_artifacts_handler
 
     def __str__(self):
         return f"<Step {self.name}>"
@@ -73,19 +80,24 @@ class Step:
             _invoke_kwargs["extravars"] = self.vars
 
         self.signal('start')
-        a = ansible_runner.interface.run_async(**_invoke_kwargs)
-        print(a)
-        print([d for d in dir(a[0]) if not d.startswith("_")])
-        print([d for d in dir(a[1]) if not d.startswith("_")])
-        while a[0].is_alive():
-            print("--- events ---")
-            print(a[1].events)
-            print("--- last_stdout_update ---")
-            print(a[1].last_stdout_update)
-            print("--- stats ---")
-            print(a[1].stats)
-            print("--- status ---")
-            print(a[1].status)
+        a = ansible_runner.interface.run_async(quiet=True, event_handler=self.invoke_event_handler, **_invoke_kwargs)
+        self.thread = a[0]
+        self.runner = a[1]
+        #print(a)
+        #print([d for d in dir(a[0]) if not d.startswith("_")])
+        #print([d for d in dir(a[1]) if not d.startswith("_")])
+        #while a[0].is_alive():
+            #print("--- events ---")
+            #print(a[1].events)
+            #print([d for d in dir(a[1].events) if not d.startswith("_")])
+            #for i in a[1].events:
+                #print(f"STDOUT: {i['stdout']}")
+            #print("--- last_stdout_update ---")
+            #print(a[1].last_stdout_update)
+            #print("--- stats ---")
+            #print(a[1].stats)
+            #print("--- status ---")
+            #print(a[1].status)
         self.signal('finish')
 
     @classmethod
@@ -94,6 +106,43 @@ class Step:
 
     def signal(self, sender: str):
         self.interface.signaler.send(sender)
+
+    def invoke_event_handler(self, *args, **kwargs):
+        self.signal('event')
+        self.event_handler(*args, **kwargs)
+
+    def default_event_handler(self, event_data):
+        print(event_data)
+        return True
+
+    def invoke_cancel_callback(self, *args, **kwargs):
+        self.signal('cancel')
+        self.cancel_callback(*args, **kwargs)
+
+    def default_cancel_callback(self):
+        return False
+
+    def invoke_finished_callback(self, *args, **kwargs):
+        self.signal('finished')
+        self.finished_callback(*args, **kwargs)
+
+    def default_finished_callback(self, *args, **kwargs):
+        print(f"args: {args}, kwargs: {kwargs}")
+        pass
+
+    def invoke_status_handler(self, *args, **kwargs):
+        self.signal('status')
+        self.status_handler(*args, **kwargs)
+
+    def default_status_handler(self, status_data, runner_config):
+        pass
+
+    def invoke_artifacts_handler(self, *args, **kwargs):
+        self.signal('artifacts')
+        self.artifacts_handler(*args, **kwargs)
+
+    def default_artifacts_handler(self, artifact_dir):
+        pass
 
 
 class Plan:
