@@ -29,6 +29,11 @@ class Step:
         when: list | None = None,
         env: dict | None = None,
         context: Path | None = None,
+        event_handler: Callable = None,
+        cancel_callback: Callable = None,
+        finished_callback: Callable = None,
+        status_handler: Callable = None,
+        artifacts_handler: Callable = None,
         *args,
         **kwargs,
     ):
@@ -58,11 +63,31 @@ class Step:
         self.context = context
         self.thread = None
         self.runner = None
-        self.event_handler = self.default_event_handler
-        self.cancel_callback = self.default_cancel_callback
-        self.finished_callback = self.default_finished_callback
-        self.status_handler = self.default_status_handler
-        self.artifacts_handler = self.default_artifacts_handler
+
+        if event_handler is None:
+            self.event_handler = self.default_event_handler
+        else:
+            self.event_handler = event_handler
+
+        if cancel_callback is None:
+            self.cancel_callback = self.default_cancel_callback
+        else:
+            self.cancel_callback = cancel_callback
+
+        if finished_callback is None:
+            self.finished_callback = self.default_finished_callback
+        else:
+            self.finished_callback = finished_callback
+
+        if status_handler is None:
+            self.status_handler = self.default_status_handler
+        else:
+            self.status_handler = status_handler
+
+        if artifacts_handler is None:
+            self.artifacts_handler = self.default_artifacts_handler
+        else:
+            self.artifacts_handler = artifacts_handler
 
     def __str__(self):
         return f"<Step {self.name}>"
@@ -80,7 +105,9 @@ class Step:
             _invoke_kwargs["extravars"] = self.vars
 
         self.signal('start')
-        a = ansible_runner.interface.run_async(quiet=True, event_handler=self.invoke_event_handler, **_invoke_kwargs)
+        a = ansible_runner.interface.run_async(
+            quiet=True, event_handler=self.invoke_event_handler, **_invoke_kwargs
+        )
         self.thread = a[0]
         self.runner = a[1]
         #print(a)
