@@ -37,7 +37,7 @@ Changelog = "https://github.com/DevOpsJeremy/runible/blob/main/CHANGELOG.md"
 runible = "runible.cli:runible"
 
 [project.entry-points."runible"]
-default = "plugins.default"
+default = "plugins.default:main"
 
 [tool.hatch.version]
 path = "src/runible/__init__.py"

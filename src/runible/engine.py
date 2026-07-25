@@ -69,9 +69,9 @@ class Step:
         if self.vars is not None:
             _invoke_kwargs["extravars"] = self.vars
 
-        self.signaler.send('start')
+        self.interface.signaler.send('start')
         ansible_runner.interface.run(**_invoke_kwargs)
-        self.signaler.send('finish')
+        self.interface.signaler.send('finish')
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):

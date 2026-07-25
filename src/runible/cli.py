@@ -18,5 +18,4 @@ def run(file):
         print(args)
         print(kwargs)
 
-    s = signal()
     Workflow(Graph.from_file(file)).run(fn=Step.invoke)
