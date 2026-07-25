@@ -1,4 +1,4 @@
-interface: test
+interface: cust
 # Global vars
 # passed into playbook run as extra vars
 vars:

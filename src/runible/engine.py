@@ -139,7 +139,16 @@ class Plan:
                 f"The {self.entry_group} plugin '{name}' was not found"
             )
 
-        return interface_plugins[0].load()
+        interface_plugin = interface_plugins[0]
+
+        if len(interface_plugins) > 1:
+            preferred_plugins = [
+                i for i in interface_plugins if i.dist.name == __package__
+            ]
+            if len(preferred_plugins) > 0:
+                interface_plugin = preferred_plugins[0]
+
+        return interface_plugin.load()
 
     def get_steps(self, steps: dict):
         step_list = []
