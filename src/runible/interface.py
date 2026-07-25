@@ -11,11 +11,12 @@ class Interface:
 
     def get_handlers(self):
         return {
+            "quiet": True,
             "event_handler": self.event_handler,
             "cancel_callback": self.cancel_callback,
             "finished_callback": self.finished_callback,
             "status_handler": self.status_handler,
-            "artifacts_handler": self.artifacts_handler
+            "artifacts_handler": self.artifacts_handler,
         }
 
     @classmethod
