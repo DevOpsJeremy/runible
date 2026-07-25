@@ -11,6 +11,9 @@ from pathlib import Path
 from runible.utilities import as_list
 from runible.interface import Interface
 
+# TODO: Remove
+from ansible_runner.exceptions import AnsibleRunnerException
+
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
@@ -70,7 +73,19 @@ class Step:
             _invoke_kwargs["extravars"] = self.vars
 
         self.interface.signaler.send('start')
-        ansible_runner.interface.run(**_invoke_kwargs)
+        a = ansible_runner.interface.run_async(**_invoke_kwargs)
+        print(a)
+        print([d for d in dir(a[0]) if not d.startswith("_")])
+        print([d for d in dir(a[1]) if not d.startswith("_")])
+        while a[0].is_alive():
+            print("--- events ---")
+            print(a[1].events)
+            print("--- last_stdout_update ---")
+            print(a[1].last_stdout_update)
+            print("--- stats ---")
+            print(a[1].stats)
+            print("--- status ---")
+            print(a[1].status)
         self.interface.signaler.send('finish')
 
     @classmethod
