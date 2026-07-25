@@ -59,10 +59,6 @@ class Step:
         else:
             self.when = as_list(when)
 
-        self.context = context
-        self.thread = None
-        self.runner = None
-
         if event_handler is None:
             self.event_handler = self.default_event_handler
         else:
@@ -87,6 +83,10 @@ class Step:
             self.artifacts_handler = self.default_artifacts_handler
         else:
             self.artifacts_handler = artifacts_handler
+
+        self.context = context
+        self.thread = None
+        self.runner = None
 
     def __str__(self):
         return f"<Step {self.name}>"
