@@ -9,14 +9,15 @@ class Interface:
     def __init__(self):
         pass
 
-    def get_handlers(self):
+    @classmethod
+    def get_handlers(cls):
         return {
             "quiet": True,
-            "event_handler": self.event_handler,
-            "cancel_callback": self.cancel_callback,
-            "finished_callback": self.finished_callback,
-            "status_handler": self.status_handler,
-            "artifacts_handler": self.artifacts_handler,
+            "event_handler": cls.event_handler,
+            "cancel_callback": cls.cancel_callback,
+            "finished_callback": cls.finished_callback,
+            "status_handler": cls.status_handler,
+            "artifacts_handler": cls.artifacts_handler,
         }
 
     @classmethod

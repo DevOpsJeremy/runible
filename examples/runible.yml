@@ -1,3 +1,4 @@
+interface: test
 # Global vars
 # passed into playbook run as extra vars
 vars:
