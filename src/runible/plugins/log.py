@@ -9,7 +9,10 @@ class LogInterface(Interface):
         super().__init__()
 
     def event(self, sender: Step, **event_data):
-        stdout = event_data["stdout"]
+        stdout = event_data.get("stdout")
+        if not stdout:
+            return
+
         dt = datetime.now()  # noqa
         for line in stdout.splitlines():
             if line != "":
