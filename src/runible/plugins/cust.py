@@ -7,7 +7,6 @@ class CustInterface(Interface):
         super().__init__()
 
     def event(self, event_data):
-        print(event_data)
         stdout = event_data["stdout"]
         dt = datetime.now()
         for line in stdout.splitlines():

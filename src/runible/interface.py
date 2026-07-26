@@ -40,20 +40,24 @@ class InterfaceSignal(Signal):
 
     @classmethod
     def receive(cls, *args, **kwargs):
-        print(f"RECEIVED: args - {args}, kwargs - {kwargs}")
+        #print(f"RECEIVED: args - {args}, kwargs - {kwargs}")
         if "step" not in kwargs:
             return
 
         step = kwargs["step"]
-        _invoke_args = [kwargs.get("sender")]
+        if 'sender' in kwargs and kwargs['sender'] == 'event':
+            step.plan.interface.event(step.plan.interface, event_data=kwargs['event_args'][0])
+
+        interface = step.get_interface()
+        _invoke_args = []
         if "event_args" in kwargs and kwargs["event_args"]:
             _invoke_args.extend(kwargs["event_args"])
 
-        _invoke_kwargs = {}
+        _invoke_kwargs = {'signal': kwargs.get("sender")}
         if "event_kwargs" in kwargs and kwargs["event_kwargs"]:
             _invoke_kwargs = {**_invoke_kwargs, **kwargs["event_kwargs"]}
 
-        step.plan.interface.invoke(*_invoke_args, **_invoke_kwargs)
+        #interface.invoke(*_invoke_args, **_invoke_kwargs)
 
     @classmethod
     def signal_event(cls, *args, **kwargs):

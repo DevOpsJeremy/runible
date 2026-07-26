@@ -71,7 +71,6 @@ class Step:
     def _invoke(self, *args, **kwargs):
         signaler = self.get_signaler()
         handlers = signaler.get_handlers(self)
-        print(f"Handlers: {handlers}")
         invoke_kwargs = {"playbook": str(self.run), **handlers}
 
         context = self.get_context()
@@ -85,7 +84,7 @@ class Step:
             invoke_kwargs["extravars"] = self.vars
 
         self.signal("initiate")
-        a = ansible_runner.interface.run_async(**invoke_kwargs)
+        a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
         self.thread = a[0]
         self.runner = a[1]
         self.signal("complete")
