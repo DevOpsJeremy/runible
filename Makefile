@@ -59,8 +59,9 @@ all: clean install test lint
 run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
 
+DOCS_PACKAGES ?= zensical mkdocstrings-python
 pre-docs: install
-	pip install zensical mkdocstrings-python
+	pip install $(DOCS_PACKAGES)
 
 DOCS_ARGS ?= --clean
 docs: pre-docs
