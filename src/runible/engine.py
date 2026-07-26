@@ -121,8 +121,8 @@ class Step:
     def invoke(cls, step: Step, *args, **kwargs):
         step._invoke(*args, **kwargs)
 
-    def signal(self, status: str, *args, **kwargs):
-        signal(status).send(self, *args, **kwargs)
+    def signal(self, status: str, **kwargs):
+        signal(status).send(self, **kwargs)
 
 
 class Plan:
