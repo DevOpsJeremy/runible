@@ -160,9 +160,15 @@ class Plan:
         self.steps = self.get_steps(steps)
 
     def get_interface_object(self, name: str):
-        interface_plugins = [
-            i for i in entry_points(group=self.entry_group) if i.name == name
-        ]
+        eps = entry_points()
+        if hasattr(eps, "select"):
+            interface_plugins = [
+                i for i in eps.select(group=self.entry_group) if i.name == name
+            ]
+        else:
+            interface_plugins = [
+                i for i in eps.get(self.entry_group, []) if i.name == name
+            ]
         if len(interface_plugins) == 0:
             raise click.UsageError(
                 f"The {self.entry_group} plugin '{name}' was not found"
