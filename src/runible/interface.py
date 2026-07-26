@@ -13,6 +13,8 @@ class Interface:
         self.register_listeners()
 
     def register_listeners(self):
+        """Connects listener callbacks to specific signals"""
+
         signal("start").connect(self.start)
         signal("event").connect(self.event)
         signal("finished").connect(self.finished)
