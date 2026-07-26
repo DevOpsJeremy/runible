@@ -9,9 +9,10 @@ import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
-from runible.plugins.default import DefaultInterface
 from runible.interface import InterfaceSignal
 from importlib.metadata import entry_points
+# TODO: Remove
+from blinker import signal
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -65,13 +66,34 @@ class Step:
     def get_interface(self):
         return self.plan.interface
 
-    def get_signaler(self):
-        return self.plan.signaler
+    def receive(self, *args, **kwargs):
+        print(f"RECEIVED message from {self}")
+        print(f"args: {args}, kwargs: {kwargs}")
+
+    def event_handler(self, event_data):
+        self.signal('event', **event_data)
+
+    def cancel_callback(self):
+        self.signal('cancel')
+
+    def finished_callback(self, runner: ansible_runner.runner.Runner):
+        self.signal('finished', runner=runner)
+
+    def status_handler(self, status_data: dict, runner_config: ansible_runner.runner_config.RunnerConfig):
+        self.signal('status', status_data=status_data, runner_config=runner_config)
+
+    def artifacts_handler(self, artifact_dir: str):
+        self.signal('artifacts', artifact_dir=artifact_dir)
 
     def _invoke(self, *args, **kwargs):
-        signaler = self.get_signaler()
-        handlers = signaler.get_handlers(self)
-        invoke_kwargs = {"playbook": str(self.run), **handlers}
+        invoke_kwargs = {
+            "playbook": str(self.run),
+            "event_handler": self.event_handler,
+            "cancel_callback": self.cancel_callback,
+            "finished_callback": self.finished_callback,
+            "status_handler": self.status_handler,
+            "artifacts_handler": self.artifacts_handler,
+        }
 
         context = self.get_context()
         if context is not None:
@@ -83,18 +105,27 @@ class Step:
         if self.vars is not None:
             invoke_kwargs["extravars"] = self.vars
 
-        self.signal("initiate")
-        a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
+        self.signal("start")
+        #a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
+        a = ansible_runner.interface.run_async(
+            quiet=True,
+            **invoke_kwargs
+        )
+        signal('event').connect(self.receive)
+        signal('finished').connect(self.receive)
+        signal('artifacts').connect(self.receive)
+        signal('status').connect(self.receive)
+        signal('cancel').connect(self.receive)
         self.thread = a[0]
         self.runner = a[1]
-        self.signal("complete")
+        self.signal("end")
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
         step._invoke(*args, **kwargs)
 
-    def signal(self, sender: str):
-        self.get_signaler().send(sender=sender, step=self)
+    def signal(self, status: str, *args, **kwargs):
+        signal(status).send(sender=self, *args, **kwargs)
 
 
 class Plan:
@@ -114,7 +145,6 @@ class Plan:
         vars: dict | None = None,
         steps: dict | None = None,
         interface: str = "default",
-        signaler: InterfaceSignal = None,
         context: Path | None = None,
         *args,
         **kwargs,
@@ -129,23 +159,12 @@ class Plan:
         else:
             self.env = env
 
-        if signaler is None:
-            self.signaler = InterfaceSignal()
-        else:
-            self.signaler = signaler
-
-        self.interface = self.get_interface(interface)()
+        interface_class = self.get_interface_object(interface)
+        self.interface = interface_class()
         self.context = context
         self.steps = self.get_steps(steps)
-        self.initialize_signaler()
 
-    def initialize_signaler(self):
-        self.signaler.connect(self.signaler.receive)
-
-    def get_interface(self, name: str):
-        if name == "default":
-            return DefaultInterface
-
+    def get_interface_object(self, name: str):
         interface_plugins = [
             i for i in entry_points(group=self.entry_group) if i.name == name
         ]
