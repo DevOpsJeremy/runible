@@ -46,7 +46,7 @@ class InterfaceSignal(Signal):
 
         step = kwargs["step"]
         if 'sender' in kwargs and kwargs['sender'] == 'event':
-            step.plan.interface.event(step.plan.interface, event_data=kwargs['event_args'][0])
+            step.plan.interface.event(step.plan.interface, step=step, event_data=kwargs['event_args'][0])
 
         interface = step.get_interface()
         _invoke_args = []
