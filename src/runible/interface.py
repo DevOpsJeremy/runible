@@ -24,7 +24,9 @@ class InterfaceSignal(Signal):
 
             def _handler(*args, **kwargs):
                 # Send the signal with the Step context and the original args/kwargs
-                self.send(sender=sender_value, step=step, event_args=args, event_kwargs=kwargs)
+                self.send(
+                    sender=sender_value, step=step, event_args=args, event_kwargs=kwargs
+                )
 
             return _handler
 
@@ -39,8 +41,19 @@ class InterfaceSignal(Signal):
     @classmethod
     def receive(cls, *args, **kwargs):
         print(f"RECEIVED: args - {args}, kwargs - {kwargs}")
-        if 'step' in kwargs:
+        if "step" not in kwargs:
+            return
 
+        step = kwargs["step"]
+        _invoke_args = [kwargs.get("sender")]
+        if "event_args" in kwargs and kwargs["event_args"]:
+            _invoke_args.extend(kwargs["event_args"])
+
+        _invoke_kwargs = {}
+        if "event_kwargs" in kwargs and kwargs["event_kwargs"]:
+            _invoke_kwargs = {**_invoke_kwargs, **kwargs["event_kwargs"]}
+
+        step.plan.interface.invoke(*_invoke_args, **_invoke_kwargs)
 
     @classmethod
     def signal_event(cls, *args, **kwargs):
@@ -67,18 +80,40 @@ class Interface:
     def __init__(self):
         pass
 
-    def event(self):
+    def invoke(self, signal, *args, **kwargs):
+        match signal:
+            case "initiate":
+                return self.initiate(*args, **kwargs)
+            case "event":
+                return self.event(*args, **kwargs)
+            case "cancel":
+                return self.cancel(*args, **kwargs)
+            case "finished":
+                return self.finished(*args, **kwargs)
+            case "status":
+                return self.status(*args, **kwargs)
+            case "artifacts":
+                return self.artifacts(*args, **kwargs)
+            case "complete":
+                return self.complete(*args, **kwargs)
+
+    def initiate(self, *args, **kwargs):
         pass
 
-    def cancel(self):
-        pass
- 
-    def finished(self):
+    def event(self, event_data):
         pass
 
-    def status(self):
+    def cancel(self, *args, **kwargs):
         pass
 
-    def artifacts(self):
+    def finished(self, *args, **kwargs):
         pass
 
+    def status(self, *args, **kwargs):
+        pass
+
+    def artifacts(self, *args, **kwargs):
+        pass
+
+    def complete(self, *args, **kwargs):
+        pass
