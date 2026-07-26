@@ -49,7 +49,7 @@ lint-fix: pre-lint
 
 fix: format lint-fix
 
-TRASH_FILES := dist *junit.xml .*_cache __pycache__
+TRASH_FILES := dist *junit.xml .*_cache *.cache __pycache__ site
 clean:
 	$(HEADER)
 	@$(foreach f,$(TRASH_FILES),find . -name '$(f)' -exec rm -vrf {} +;)
