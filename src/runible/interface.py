@@ -2,11 +2,11 @@ from blinker import Signal
 
 
 class InterfaceSignal(Signal):
-    event_sender = "runner_event"
-    cancel_sender = "runner_cancel"
-    finished_sender = "runner_finished"
-    status_sender = "runner_status"
-    artifacts_sender = "runner_artifacts"
+    event_sender = "event"
+    cancel_sender = "cancel"
+    finished_sender = "finished"
+    status_sender = "status"
+    artifacts_sender = "artifacts"
 
     def __init__(self):
         super().__init__()
@@ -39,6 +39,8 @@ class InterfaceSignal(Signal):
     @classmethod
     def receive(cls, *args, **kwargs):
         print(f"RECEIVED: args - {args}, kwargs - {kwargs}")
+        if 'step' in kwargs:
+
 
     @classmethod
     def signal_event(cls, *args, **kwargs):

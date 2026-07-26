@@ -95,7 +95,10 @@ class Step:
         step._invoke(*args, **kwargs)
 
     def signal(self, sender: str):
-        self.get_signaler().send(sender=sender)
+        self.get_signaler().send(
+            sender=sender,
+            step=self
+        )
 
 
 class Plan:
