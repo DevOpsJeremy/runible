@@ -5,7 +5,8 @@ from blinker import signal
 
 
 class Interface:
-    def __init__(self):
+    def __init__(self, quiet: bool = True):
+        self.quiet = quiet
         self.register_listeners()
 
     def register_listeners(self):
