@@ -3,7 +3,6 @@ site_name = "Runible"
 site_description = "Ansible flow orchestrator"
 site_author = "DevOps Jeremy"
 site_url = "https://DevOpsJeremy.github.io/runible"
-
 copyright = """
 Copyright &copy; 2026 Jeremy Watkins
 """
