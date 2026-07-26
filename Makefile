@@ -3,6 +3,10 @@ define HEADER
 	@printf "\n-----\n%s\n-----\n\n" "$@"
 endef
 
+define CLEAN
+	@$(foreach f,$(1),find . -name '$(f)' -exec rm -vrf {} +;)
+endef
+
 CMD?=runible
 RUNIBLE_RUN_FILE?=examples/runible.yml
 
@@ -49,12 +53,36 @@ lint-fix: pre-lint
 
 fix: format lint-fix
 
-TRASH_FILES := dist *junit.xml .*_cache *.cache __pycache__ site
-clean:
-	$(HEADER)
-	@$(foreach f,$(TRASH_FILES),find . -name '$(f)' -exec rm -vrf {} +;)
-
 all: clean install test lint
 
 run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
+
+pre-docs:
+	pip install zensical mkdocstrings-python
+
+docs: pre-docs
+	zensical build
+
+LINT_TRASH_FILES := .ruff_cache
+clean-lint:
+	$(call CLEAN,$(LINT_TRASH_FILES))
+
+TEST_TRASH_FILES := .pytest_cache pytest.junit.xml __pycache__
+clean-test:
+	$(call CLEAN,$(TEST_TRASH_FILES))
+
+DOCS_TRASH_FILES := .cache site
+clean-docs:
+	$(call CLEAN,$(DOCS_TRASH_FILES))
+
+BUILD_TRASH_FILES := dist
+clean-build:
+	$(call CLEAN,$(BUILD_TRASH_FILES))
+
+TRASH_FILES := 
+clean:
+	$(HEADER)
+	$(call CLEAN,$(TRASH_FILES))
+
+
