@@ -181,7 +181,9 @@ class Plan:
 
         if len(interface_plugins) > 1:
             preferred_plugins = [
-                i for i in interface_plugins if getattr(getattr(i, "dist", None), "name", None) == __package__
+                i
+                for i in interface_plugins
+                if getattr(i, "dist", None) is not None and i.dist.name == __package__
             ]
             if preferred_plugins:
                 interface_plugin = preferred_plugins[0]
