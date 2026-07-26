@@ -6,6 +6,8 @@ from .engine import Step
 
 
 class Interface:
+    """The base Interface class which other interfaces will extend"""
+
     def __init__(self, quiet: bool = True):
         self.quiet = quiet
         self.register_listeners()
