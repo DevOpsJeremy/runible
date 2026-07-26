@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from runible.engine import Step
-from runible.interface import Interface
+from ..engine import Step
+from ..interface import Interface
 
 
 class LogInterface(Interface):
