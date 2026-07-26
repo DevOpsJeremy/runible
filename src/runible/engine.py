@@ -173,7 +173,8 @@ class Plan:
             ]
         if len(interface_plugins) == 0:
             raise click.UsageError(
-                f"The {self.entry_group} plugin '{name}' was not found"
+                f"The '{name}' interface plugin was not found in entry-point group '{self.entry_group}'. "
+                "Make sure the plugin is installed so entry points are registered."
             )
 
         interface_plugin = interface_plugins[0]
