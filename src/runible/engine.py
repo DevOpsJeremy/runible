@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from importlib.metadata import entry_points
+from pathlib import Path
+
 import ansible_runner
 import click
-import json
 import jsonschema
 import networkx as nx
 import yaml
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from .utilities import as_list
-from importlib.metadata import entry_points
 from blinker import signal
+
+from .utilities import as_list
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -267,7 +269,7 @@ class Graph(nx.DiGraph):
 
     def build(self):
         if self.config is None or self.config.steps is None:
-            raise Exception("No steps found in configuration")
+            raise click.UsageError("No steps found in configuration")
 
         for step in self.config.steps:
             self.add_node(step.name, step=step)

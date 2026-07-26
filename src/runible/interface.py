@@ -1,7 +1,8 @@
-from .engine import Step
 from ansible_runner.runner import Runner
 from ansible_runner.runner_config import RunnerConfig
 from blinker import signal
+
+from .engine import Step
 
 
 class Interface:
