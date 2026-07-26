@@ -191,8 +191,12 @@ class Plan:
                 raise click.UsageError(
                     f"Multiple {self.entry_group} plugins named '{name}' were found; please uninstall the extra plugin(s)"
                 )
-
-        return interface_plugin.load()
+        try:
+            return interface_plugin.load()
+        except Exception as e:
+            raise click.UsageError(
+                f"Failed to load interface plugin '{name}' from '{getattr(interface_plugin, 'value', '<unknown>')}'"
+            ) from e
 
     def get_steps(self, steps: dict):
         step_list = []
