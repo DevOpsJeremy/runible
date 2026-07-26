@@ -65,6 +65,7 @@ class Step:
         return self.plan.context
 
     def get_interface(self):
+        """Get the interface from the plan"""
         return self.plan.interface
 
     def start(self):
