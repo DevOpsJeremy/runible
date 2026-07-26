@@ -4,7 +4,9 @@
     "vars": { "$ref": "#/$defs/vars" },
     "env": { "$ref": "#/$defs/env" },
     "interface": {
-      "type": "string"
+      "type": "string",
+      "default": "default",
+      "description": "Name of the interface plugin (entry point in group 'runible')."
     },
     "steps": {
       "type": "object",
