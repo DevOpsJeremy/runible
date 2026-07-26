@@ -59,7 +59,7 @@ all: clean install test lint
 run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
 
-pre-docs:
+pre-docs: install
 	pip install zensical mkdocstrings-python
 
 DOCS_ARGS ?= --clean
