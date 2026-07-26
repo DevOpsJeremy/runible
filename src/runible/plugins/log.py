@@ -5,9 +5,6 @@ from ..interface import Interface
 
 
 class LogInterface(Interface):
-    def __init__(self):
-        super().__init__()
-
     def event(self, sender: Step, **event_data):
         stdout = event_data.get("stdout")
         if not stdout:
