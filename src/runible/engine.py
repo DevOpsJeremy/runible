@@ -22,11 +22,11 @@ class Step:
         self,
         name: str,
         run: str,
+        plan: Plan,
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
         env: dict | None = None,
-        plan: Plan | None = None,
         *args,
         **kwargs,
     ):
