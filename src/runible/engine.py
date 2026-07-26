@@ -18,6 +18,7 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
 class Step:
+    """Represents a single step in a plan"""
     def __init__(
         self,
         name: str,
@@ -59,6 +60,7 @@ class Step:
         return f"<Step {self.name}>"
 
     def get_context(self):
+        """Get the context (working directory) from the plan"""
         return self.plan.context
 
     def get_interface(self):

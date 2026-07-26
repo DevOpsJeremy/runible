@@ -7,8 +7,8 @@ define CLEAN
 	@$(foreach f,$(1),find . -name '$(f)' -exec rm -vrf {} +;)
 endef
 
-CMD?=runible
-RUNIBLE_RUN_FILE?=examples/runible.yml
+CMD ?= runible
+RUNIBLE_RUN_FILE ?= examples/runible.yml
 
 pre-build:
 	$(HEADER)
@@ -61,30 +61,31 @@ run: install
 pre-docs:
 	pip install zensical mkdocstrings-python
 
+DOCS_ARGS ?= --clean
 docs: pre-docs
-	zensical build
+	zensical build $(DOCS_ARGS)
 
-LINT_TRASH_FILES := .ruff_cache
+LINT_TRASH_FILES ?= .ruff_cache
 clean-lint:
 	$(HEADER)
 	$(call CLEAN,$(LINT_TRASH_FILES))
 
-TEST_TRASH_FILES := .pytest_cache pytest.junit.xml __pycache__
+TEST_TRASH_FILES ?= .pytest_cache pytest.junit.xml __pycache__
 clean-test:
 	$(HEADER)
 	$(call CLEAN,$(TEST_TRASH_FILES))
 
-DOCS_TRASH_FILES := .cache site
+DOCS_TRASH_FILES ?= .cache site
 clean-docs:
 	$(HEADER)
 	$(call CLEAN,$(DOCS_TRASH_FILES))
 
-BUILD_TRASH_FILES := dist
+BUILD_TRASH_FILES ?= dist
 clean-build:
 	$(HEADER)
 	$(call CLEAN,$(BUILD_TRASH_FILES))
 
-TRASH_FILES := 
+TRASH_FILES ?= 
 clean: clean-lint clean-test clean-docs clean-build
 	$(HEADER)
 	$(call CLEAN,$(TRASH_FILES))
