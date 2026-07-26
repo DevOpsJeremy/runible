@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from runible.utilities import as_list
 from runible.plugins.default import DefaultInterface
+from runible.interface import InterfaceSignal
 from importlib.metadata import entry_points
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
@@ -64,9 +65,14 @@ class Step:
     def get_interface(self):
         return self.plan.interface
 
+    def get_signaler(self):
+        return self.plan.signaler
+
     def _invoke(self, *args, **kwargs):
-        interface = self.get_interface()
-        invoke_kwargs = {"playbook": str(self.run), **interface.get_handlers()}
+        signaler = self.get_signaler()
+        handlers = signaler.get_handlers(self)
+        print(f"Handlers: {handlers}")
+        invoke_kwargs = {"playbook": str(self.run), **handlers}
 
         context = self.get_context()
         if context is not None:
@@ -89,7 +95,7 @@ class Step:
         step._invoke(*args, **kwargs)
 
     def signal(self, sender: str):
-        self.get_interface().signaler.send(sender)
+        self.get_signaler().send(sender=sender)
 
 
 class Plan:
@@ -109,6 +115,7 @@ class Plan:
         vars: dict | None = None,
         steps: dict | None = None,
         interface: str = "default",
+        signaler: InterfaceSignal = None,
         context: Path | None = None,
         *args,
         **kwargs,
@@ -123,9 +130,18 @@ class Plan:
         else:
             self.env = env
 
+        if signaler is None:
+            self.signaler = InterfaceSignal()
+        else:
+            self.signaler = signaler
+
         self.interface = self.get_interface(interface)()
         self.context = context
         self.steps = self.get_steps(steps)
+        self.initialize_signaler()
+
+    def initialize_signaler(self):
+        self.signaler.connect(self.signaler.receive)
 
     def get_interface(self, name: str):
         if name == "default":

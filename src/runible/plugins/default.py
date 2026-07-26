@@ -5,9 +5,6 @@ class DefaultInterface(Interface):
     def __init__(self):
         super().__init__()
 
-    def get_handlers(self):
-        return {"quiet": False}
-
 
 def main():
     return DefaultInterface

@@ -7,11 +7,11 @@ class CustInterface(Interface):
         super().__init__()
 
     @classmethod
-    def event_handler(cls, event_data):
-        stdout = event_data['stdout']
+    def event(cls, event_data):
+        stdout = event_data["stdout"]
         dt = datetime.now()
         for line in stdout.splitlines():
-            if line != '':
+            if line != "":
                 print(f"{datetime.now()} : [RUNIBLE] {line}")
 
 
