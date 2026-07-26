@@ -113,7 +113,9 @@ class Step:
 
         self.start()
         try:
-            ansible_runner.interface.run(quiet=self.get_interface().quiet, **invoke_kwargs)
+            ansible_runner.interface.run(
+                quiet=self.get_interface().quiet, **invoke_kwargs
+            )
         finally:
             self.end()
 

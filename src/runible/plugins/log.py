@@ -13,7 +13,7 @@ class LogInterface(Interface):
         if not stdout:
             return
 
-        dt = datetime.now()  # noqa
+        dt = datetime.now()  # noqa DTZ005
         for line in stdout.splitlines():
             if line != "":
                 print(f"{dt} : [RUNIBLE] [{sender.name}] {line}")
