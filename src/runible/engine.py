@@ -112,11 +112,7 @@ class Step:
             invoke_kwargs["extravars"] = self.vars
 
         self.start()
-        a = ansible_runner.interface.run_async(
-            quiet=self.get_interface().quiet, **invoke_kwargs
-        )
-        self.thread = a[0]
-        self.runner = a[1]
+        ansible_runner.interface.run(quiet=self.get_interface().quiet, **invoke_kwargs)
         self.end()
 
     @classmethod
