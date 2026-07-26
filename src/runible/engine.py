@@ -54,8 +54,6 @@ class Step:
             self.when = as_list(when)
 
         self.plan = plan
-        self.thread = None
-        self.runner = None
 
     def __str__(self):
         return f"<Step {self.name}>"
