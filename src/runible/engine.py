@@ -279,7 +279,7 @@ class Graph(nx.DiGraph):
         return graph
 
     def build(self):
-        if self.config is None or self.config.steps is None:
+        if self.config is None or not self.config.steps:
             raise click.UsageError("No steps found in configuration")
 
         for step in self.config.steps:
