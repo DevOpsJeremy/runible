@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from importlib.metadata import entry_points
+from pathlib import Path
+
 import ansible_runner
 import click
-import json
 import jsonschema
 import networkx as nx
 import yaml
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from runible.utilities import as_list
+from blinker import signal
+
+from .utilities import as_list
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -18,11 +22,11 @@ class Step:
         self,
         name: str,
         run: str,
+        plan: Plan,
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
         env: dict | None = None,
-        context: Path | None = None,
         *args,
         **kwargs,
     ):
@@ -49,28 +53,76 @@ class Step:
         else:
             self.when = as_list(when)
 
-        self.context = context
+        self.plan = plan
 
     def __str__(self):
         return f"<Step {self.name}>"
 
-    def _invoke(self, *args, **kwargs):
-        _invoked_kwargs = {"playbook": str(self.run)}
+    def get_context(self):
+        return self.plan.context
 
-        if self.context is not None:
-            _invoked_kwargs["project_dir"] = str(self.context)
+    def get_interface(self):
+        return self.plan.interface
+
+    def start(self):
+        self.signal("start")
+
+    def event_handler(self, event_data):
+        self.signal("event", **event_data)
+
+    def cancel_callback(self):
+        self.signal("cancel")
+
+    def finished_callback(self, runner: ansible_runner.runner.Runner):
+        self.signal("finished", runner=runner)
+
+    def status_handler(
+        self,
+        status_data: dict,
+        runner_config: ansible_runner.runner_config.RunnerConfig,
+    ):
+        self.signal("status", status_data=status_data, runner_config=runner_config)
+
+    def artifacts_handler(self, artifact_dir: str):
+        self.signal("artifacts", artifact_dir=artifact_dir)
+
+    def end(self):
+        self.signal("end")
+
+    def _invoke(self, *args, **kwargs):
+        invoke_kwargs = {
+            "playbook": str(self.run),
+            "event_handler": self.event_handler,
+            "cancel_callback": self.cancel_callback,
+            "finished_callback": self.finished_callback,
+            "status_handler": self.status_handler,
+            "artifacts_handler": self.artifacts_handler,
+        }
+
+        context = self.get_context()
+        if context is not None:
+            invoke_kwargs["project_dir"] = str(context)
 
         if self.env is not None:
-            _invoked_kwargs["envvars"] = self.env
+            invoke_kwargs["envvars"] = self.env
 
         if self.vars is not None:
-            _invoked_kwargs["extravars"] = self.vars
+            invoke_kwargs["extravars"] = self.vars
 
-        ansible_runner.interface.run(**_invoked_kwargs)
+        self.start()
+        try:
+            ansible_runner.interface.run(
+                quiet=self.get_interface().quiet, **invoke_kwargs
+            )
+        finally:
+            self.end()
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
         step._invoke(*args, **kwargs)
+
+    def signal(self, status: str, **kwargs):
+        signal(status).send(self, **kwargs)
 
 
 class Plan:
@@ -82,11 +134,14 @@ class Plan:
     with open(SCHEMA_FILE, "r") as f:
         SCHEMA = json.load(f)
 
+    entry_group = "runible"
+
     def __init__(
         self,
         env: dict | None = None,
         vars: dict | None = None,
         steps: dict | None = None,
+        interface: str = "default",
         context: Path | None = None,
         *args,
         **kwargs,
@@ -101,8 +156,47 @@ class Plan:
         else:
             self.env = env
 
+        interface_class = self.get_interface_object(interface)
+        self.interface = interface_class()
         self.context = context
         self.steps = self.get_steps(steps)
+
+    def get_interface_object(self, name: str):
+        eps = entry_points()
+        if hasattr(eps, "select"):
+            interface_plugins = [
+                i for i in eps.select(group=self.entry_group) if i.name == name
+            ]
+        else:
+            interface_plugins = [
+                i for i in eps.get(self.entry_group, []) if i.name == name
+            ]
+        if len(interface_plugins) == 0:
+            raise click.UsageError(
+                f"The '{name}' interface plugin was not found in entry-point group '{self.entry_group}'. "
+                "Make sure the plugin is installed so entry points are registered."
+            )
+
+        interface_plugin = interface_plugins[0]
+
+        if len(interface_plugins) > 1:
+            preferred_plugins = [
+                i
+                for i in interface_plugins
+                if getattr(i, "dist", None) is not None and i.dist.name == __package__
+            ]
+            if preferred_plugins:
+                interface_plugin = preferred_plugins[0]
+            else:
+                raise click.UsageError(
+                    f"Multiple {self.entry_group} plugins named '{name}' were found; please uninstall the extra plugin(s)"
+                )
+        try:
+            return interface_plugin.load()
+        except Exception as e:
+            raise click.UsageError(
+                f"Failed to load interface plugin '{name}' from '{getattr(interface_plugin, 'value', '<unknown>')}'"
+            ) from e
 
     def get_steps(self, steps: dict):
         step_list = []
@@ -132,7 +226,7 @@ class Plan:
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
-            step_list.append(Step(name, context=self.context, **step_copy))
+            step_list.append(Step(name, plan=self, **step_copy))
 
         return step_list
 
@@ -189,8 +283,8 @@ class Graph(nx.DiGraph):
         return graph
 
     def build(self):
-        if self.config is None or self.config.steps is None:
-            raise Exception("No steps found in configuration")
+        if self.config is None or not self.config.steps:
+            raise click.UsageError("No steps found in configuration")
 
         for step in self.config.steps:
             self.add_node(step.name, step=step)

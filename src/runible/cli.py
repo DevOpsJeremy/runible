@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import click
-from .engine import Workflow, Graph, Step
+
+from .engine import Graph, Step, Workflow
 
 
-@click.group(name="runible", context_settings=dict(auto_envvar_prefix="RUNIBLE"))
+@click.group(name="runible", context_settings={"auto_envvar_prefix": "RUNIBLE"})
 def runible():
     pass
 
