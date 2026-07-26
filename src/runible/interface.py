@@ -3,18 +3,19 @@ from ansible_runner.runner import Runner
 from ansible_runner.runner_config import RunnerConfig
 from blinker import signal
 
+
 class Interface:
     def __init__(self):
         self.register_listeners()
 
     def register_listeners(self):
-        signal('start').connect(self.start)
-        signal('event').connect(self.event)
-        signal('finished').connect(self.finished)
-        signal('artifacts').connect(self.artifacts)
-        signal('status').connect(self.status)
-        signal('cancel').connect(self.cancel)
-        signal('end').connect(self.end)
+        signal("start").connect(self.start)
+        signal("event").connect(self.event)
+        signal("finished").connect(self.finished)
+        signal("artifacts").connect(self.artifacts)
+        signal("status").connect(self.status)
+        signal("cancel").connect(self.cancel)
+        signal("end").connect(self.end)
 
     def start(self, sender: Step):
         pass

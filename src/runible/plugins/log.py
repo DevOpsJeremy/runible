@@ -1,4 +1,5 @@
 from runible.interface import Interface
+from runible.engine import Step
 from datetime import datetime
 
 
@@ -11,4 +12,4 @@ class LogInterface(Interface):
         dt = datetime.now()
         for line in stdout.splitlines():
             if line != "":
-                print(f"{datetime.now()} : [RUNIBLE] [{sender.name}] {line}")
+                print(f"{dt} : [RUNIBLE] [{sender.name}] {line}")

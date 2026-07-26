@@ -65,25 +65,29 @@ class Step:
         return self.plan.interface
 
     def start(self):
-        self.signal('start')
+        self.signal("start")
 
     def event_handler(self, event_data):
-        self.signal('event', **event_data)
+        self.signal("event", **event_data)
 
     def cancel_callback(self):
-        self.signal('cancel')
+        self.signal("cancel")
 
     def finished_callback(self, runner: ansible_runner.runner.Runner):
-        self.signal('finished', runner=runner)
+        self.signal("finished", runner=runner)
 
-    def status_handler(self, status_data: dict, runner_config: ansible_runner.runner_config.RunnerConfig):
-        self.signal('status', status_data=status_data, runner_config=runner_config)
+    def status_handler(
+        self,
+        status_data: dict,
+        runner_config: ansible_runner.runner_config.RunnerConfig,
+    ):
+        self.signal("status", status_data=status_data, runner_config=runner_config)
 
     def artifacts_handler(self, artifact_dir: str):
-        self.signal('artifacts', artifact_dir=artifact_dir)
+        self.signal("artifacts", artifact_dir=artifact_dir)
 
     def end(self):
-        self.signal('end')
+        self.signal("end")
 
     def _invoke(self, *args, **kwargs):
         invoke_kwargs = {
@@ -106,11 +110,7 @@ class Step:
             invoke_kwargs["extravars"] = self.vars
 
         self.start()
-        #a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
-        a = ansible_runner.interface.run_async(
-            quiet=True,
-            **invoke_kwargs
-        )
+        a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
         self.thread = a[0]
         self.runner = a[1]
         self.end()
