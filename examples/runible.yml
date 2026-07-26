@@ -1,4 +1,3 @@
-#interface: log
 # Global vars
 # passed into playbook run as extra vars
 vars:
@@ -30,4 +29,6 @@ steps:
     after:
       - step2
     run: playbooks/playbook4.yml
+
+interface: log
 
