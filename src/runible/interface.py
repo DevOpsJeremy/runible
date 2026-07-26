@@ -1,66 +1,39 @@
-from blinker import Signal
-
-
-class InterfaceSignal(Signal):
-    event_sender = "event"
-    cancel_sender = "cancel"
-    finished_sender = "finished"
-    status_sender = "status"
-    artifacts_sender = "artifacts"
-
-    def __init__(self):
-        super().__init__()
-
-    @classmethod
-    def receive(cls, *args, **kwargs):
-        if "step" not in kwargs:
-            return
-
-        step = kwargs["step"]
-        _invoke_args = [*args]
-        _invoke_kwargs = kwargs.copy()
-
-        step.plan.interface.invoke(*_invoke_args, **_invoke_kwargs)
-
+from .engine import Step
+from ansible_runner.runner import Runner
+from ansible_runner.runner_config import RunnerConfig
+from blinker import signal
 
 class Interface:
     def __init__(self):
+        self.register_listeners()
+
+    def register_listeners(self):
+        signal('start').connect(self.start)
+        signal('event').connect(self.event)
+        signal('finished').connect(self.finished)
+        signal('artifacts').connect(self.artifacts)
+        signal('status').connect(self.status)
+        signal('cancel').connect(self.cancel)
+        signal('end').connect(self.end)
+
+    def start(self, sender: Step, *args, **kwargs):
+        print(f"{self} {sender} {args}, {kwargs}")
         pass
 
-    def invoke(self, sender, *args, **kwargs):
-        match sender:
-            case "initiate":
-                return self.initiate(*args, **kwargs)
-            case "event":
-                return self.event(*args, **kwargs)
-            case "cancel":
-                return self.cancel(*args, **kwargs)
-            case "finished":
-                return self.finished(*args, **kwargs)
-            case "status":
-                return self.status(*args, **kwargs)
-            case "artifacts":
-                return self.artifacts(*args, **kwargs)
-            case "complete":
-                return self.complete(*args, **kwargs)
-
-    def initiate(self, *args, **kwargs):
+    def event(self, sender: Step, event_data):
         pass
 
-    def event(self, event_data, *args, **kwargs):
+    def cancel(self, sender: Step):
         pass
 
-    def cancel(self, *args, **kwargs):
+    def finished(self, sender: Step, runner: Runner):
         pass
 
-    def finished(self, *args, **kwargs):
+    def status(self, sender: Step, status_data: dict, runner_config: RunnerConfig):
         pass
 
-    def status(self, *args, **kwargs):
+    def artifacts(self, sender: Step, artifact_dir: str):
         pass
 
-    def artifacts(self, *args, **kwargs):
-        pass
-
-    def complete(self, *args, **kwargs):
+    def end(self):
         pass

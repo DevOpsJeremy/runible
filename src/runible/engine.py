@@ -8,10 +8,8 @@ import networkx as nx
 import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from runible.utilities import as_list
-from runible.interface import InterfaceSignal
+from .utilities import as_list
 from importlib.metadata import entry_points
-# TODO: Remove
 from blinker import signal
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
@@ -66,9 +64,8 @@ class Step:
     def get_interface(self):
         return self.plan.interface
 
-    def receive(self, *args, **kwargs):
-        print(f"RECEIVED message from {self}")
-        print(f"args: {args}, kwargs: {kwargs}")
+    def start(self):
+        self.signal('start')
 
     def event_handler(self, event_data):
         self.signal('event', **event_data)
@@ -84,6 +81,9 @@ class Step:
 
     def artifacts_handler(self, artifact_dir: str):
         self.signal('artifacts', artifact_dir=artifact_dir)
+
+    def end(self):
+        self.signal('end')
 
     def _invoke(self, *args, **kwargs):
         invoke_kwargs = {
@@ -105,26 +105,22 @@ class Step:
         if self.vars is not None:
             invoke_kwargs["extravars"] = self.vars
 
-        self.signal("start")
+        self.start()
         #a = ansible_runner.interface.run_async(quiet=True, **invoke_kwargs)
         a = ansible_runner.interface.run_async(
             quiet=True,
             **invoke_kwargs
         )
-        signal('event').connect(self.receive)
-        signal('finished').connect(self.receive)
-        signal('artifacts').connect(self.receive)
-        signal('status').connect(self.receive)
-        signal('cancel').connect(self.receive)
         self.thread = a[0]
         self.runner = a[1]
-        self.signal("end")
+        self.end()
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
         step._invoke(*args, **kwargs)
 
     def signal(self, status: str, *args, **kwargs):
+        print(f"SIGNAL: {status} | {args} | {kwargs}")
         signal(status).send(sender=self, *args, **kwargs)
 
 
