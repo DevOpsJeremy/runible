@@ -120,8 +120,7 @@ class Step:
         step._invoke(*args, **kwargs)
 
     def signal(self, status: str, *args, **kwargs):
-        print(f"SIGNAL: {status} | {args} | {kwargs}")
-        signal(status).send(sender=self, *args, **kwargs)
+        signal(status).send(self, *args, **kwargs)
 
 
 class Plan:

@@ -16,11 +16,10 @@ class Interface:
         signal('cancel').connect(self.cancel)
         signal('end').connect(self.end)
 
-    def start(self, sender: Step, *args, **kwargs):
-        print(f"{self} {sender} {args}, {kwargs}")
+    def start(self, sender: Step):
         pass
 
-    def event(self, sender: Step, event_data):
+    def event(self, sender: Step, **event_data):
         pass
 
     def cancel(self, sender: Step):
@@ -35,5 +34,5 @@ class Interface:
     def artifacts(self, sender: Step, artifact_dir: str):
         pass
 
-    def end(self):
+    def end(self, sender: Step):
         pass
