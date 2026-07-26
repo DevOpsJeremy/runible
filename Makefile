@@ -1,6 +1,6 @@
 .PHONY: pre-build build install pre-test test pre-lint lint pre-format format clean all run
 define HEADER
-	@printf "\n-----\n%s\n-----\n\n" "$@"
+	@printf "\n-----\n\x1b[$(COLOR_CODE)m%s\x1b[0m\n-----\n\n" "$@"
 endef
 
 define CLEAN
@@ -9,6 +9,7 @@ endef
 
 CMD ?= runible
 RUNIBLE_RUN_FILE ?= examples/runible.yml
+COLOR_CODE ?= 34
 
 pre-build:
 	$(HEADER)
