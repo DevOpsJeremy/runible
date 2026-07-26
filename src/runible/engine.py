@@ -19,6 +19,7 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 class Step:
     """Represents a single step in a plan"""
+
     def __init__(
         self,
         name: str,
