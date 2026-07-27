@@ -25,10 +25,10 @@ class Step:
         name: str,
         run: str,
         plan: Plan,
+        env: dict | None = None,
         vars: dict | None = None,
         after: list | None = None,
         when: list | None = None,
-        env: dict | None = None,
         *args,
         **kwargs,
     ):
