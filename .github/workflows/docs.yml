@@ -24,7 +24,7 @@ jobs:
           path: site/
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/13-add-documentation'
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -41,3 +41,4 @@ jobs:
       - name: Publish to GitHub Pages
         uses: actions/deploy-pages@v5
         id: deployment
+
