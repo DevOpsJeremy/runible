@@ -69,15 +69,12 @@ link = "https://github.com/DevOpsJeremy/runible"
 
 [project.plugins.mkdocstrings.handlers.python]
 inventories = ["https://docs.python.org/3/objects.inv"]
-paths = ["src/runible"]
+paths = ["src"]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "google"
 inherited_members = true
 show_source = false
-
-[project.plugins.gen-files]
-scripts = ["scripts/gen_ref_pages.py"]
 
 [project.markdown_extensions.abbr]
 [project.markdown_extensions.admonition]
