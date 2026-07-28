@@ -2,7 +2,7 @@
 icon: lucide/rocket
 ---
 
-# runible
+# Runible
 
 Ansible flow orchestrator.
 
