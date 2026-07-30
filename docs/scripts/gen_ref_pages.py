@@ -29,4 +29,3 @@ for path in sorted(src.rglob("*.py")):
         identifier = ".".join(parts)
         print(f"identifier: {identifier}")
         print("::: " + identifier, file=fd)
-
