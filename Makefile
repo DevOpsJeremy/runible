@@ -60,8 +60,13 @@ run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
 
 DOCS_PACKAGES ?= zensical mkdocstrings-python
-pre-docs: install
+docs-install: install
 	pip install $(DOCS_PACKAGES)
+
+docs-generate:
+	python docs/scripts/gen_ref_pages.py
+
+pre-docs: docs-install docs-generate
 
 DOCS_ARGS ?= --clean
 docs: pre-docs
