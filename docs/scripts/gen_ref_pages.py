@@ -18,6 +18,9 @@ for path in sorted(src.rglob("*.py")):
         continue
 
     full_doc_path.parent.mkdir(exist_ok=True)
+    print(f"VERBOSE: Writing to '{full_doc_path}'")
     with open(full_doc_path, "w") as fd:
         identifier = ".".join(parts)
-        fd.write("## ::: " + identifier)
+        content = "## ::: " + identifier
+        print(f"VERBOSE:    `{content}`")
+        fd.write(content)
