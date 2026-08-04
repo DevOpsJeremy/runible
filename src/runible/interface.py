@@ -6,11 +6,15 @@ from .engine import Step
 
 
 class Interface:
+    """The base Interface class which other interfaces will extend"""
+
     def __init__(self, quiet: bool = True):
         self.quiet = quiet
         self.register_listeners()
 
     def register_listeners(self):
+        """Connects listener callbacks to specific signals"""
+
         signal("start").connect(self.start)
         signal("event").connect(self.event)
         signal("finished").connect(self.finished)

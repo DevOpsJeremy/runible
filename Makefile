@@ -3,8 +3,12 @@ define HEADER
 	@printf "\n-----\n%s\n-----\n\n" "$@"
 endef
 
-CMD?=runible
-RUNIBLE_RUN_FILE?=examples/runible.yml
+define CLEAN
+	@$(foreach f,$(1),find . -name '$(f)' -exec rm -vrf {} +;)
+endef
+
+CMD ?= runible
+RUNIBLE_RUN_FILE ?= examples/runible.yml
 
 pre-build:
 	$(HEADER)
@@ -49,12 +53,46 @@ lint-fix: pre-lint
 
 fix: format lint-fix
 
-TRASH_FILES := dist *junit.xml .*_cache __pycache__
-clean:
-	$(HEADER)
-	@$(foreach f,$(TRASH_FILES),find . -name '$(f)' -exec rm -vrf {} +;)
-
 all: clean install test lint
 
 run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
+
+DOCS_PACKAGES ?= zensical mkdocstrings-python
+docs-install: install
+	pip install $(DOCS_PACKAGES)
+
+docs-generate:
+	python docs/scripts/gen_ref_pages.py
+
+pre-docs: docs-install docs-generate
+
+DOCS_ARGS ?= --clean
+docs: pre-docs
+	zensical build $(DOCS_ARGS)
+
+LINT_TRASH_FILES ?= .ruff_cache
+clean-lint:
+	$(HEADER)
+	$(call CLEAN,$(LINT_TRASH_FILES))
+
+TEST_TRASH_FILES ?= .pytest_cache pytest.junit.xml __pycache__
+clean-test:
+	$(HEADER)
+	$(call CLEAN,$(TEST_TRASH_FILES))
+
+DOCS_TRASH_FILES ?= .cache site
+clean-docs:
+	$(HEADER)
+	$(call CLEAN,$(DOCS_TRASH_FILES))
+
+BUILD_TRASH_FILES ?= dist
+clean-build:
+	$(HEADER)
+	$(call CLEAN,$(BUILD_TRASH_FILES))
+
+TRASH_FILES ?= 
+clean: clean-lint clean-test clean-docs clean-build
+	$(HEADER)
+	$(call CLEAN,$(TRASH_FILES))
+
