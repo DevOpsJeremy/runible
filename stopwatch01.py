@@ -6,7 +6,7 @@ class StopwatchApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        tree: Tree[str] = Tree("Node1")
+        tree: Tree[str] = Tree(name="Node1", disabled=True, label="Here's some label")
         tree.auto_expand = True
         node2 = tree.root.add("Node2")
         node2.add_leaf("Node3")
