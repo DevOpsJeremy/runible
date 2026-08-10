@@ -1,12 +1,23 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header, Tree
+from textual.binding import Binding
+
+class MyTree(Tree):
+    BINDINGS = [
+        Binding("j", "cursor_down", "Cursor Down", priority=True, show=False),
+        Binding("k", "cursor_up", "Cursor Up", priority=True, show=False),
+        Binding("l", "cursor_right", "Cursor Right", priority=True, show=False),
+        Binding("h", "cursor_left", "Cursor Left", priority=True, show=False),
+    ]
 
 class StopwatchApp(App):
-    BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
+    BINDINGS = [
+        Binding("d", "toggle_dark", "Toggle dark mode"),
+    ]
 
     def compose(self) -> ComposeResult:
         yield Header()
-        tree: Tree[str] = Tree(name="Node1", disabled=True, label="Here's some label")
+        tree: MyTree[str] = MyTree("Node1")
         tree.auto_expand = True
         node2 = tree.root.add("Node2")
         node2.add_leaf("Node3")
