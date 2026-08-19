@@ -93,7 +93,11 @@ class Step:
     def end(self):
         self.signal("end")
 
-    def _invoke(self, *args, **kwargs):
+    def _invoke(
+        self,
+        cmdline=None,
+        *args, **kwargs
+    ):
         invoke_kwargs = {
             "playbook": str(self.run),
             "event_handler": self.event_handler,
@@ -112,6 +116,9 @@ class Step:
 
         if self.vars is not None:
             invoke_kwargs["extravars"] = self.vars
+
+        if cmdline is not None:
+            invoke_kwargs["cmdline"] = cmdline
 
         self.start()
         try:
