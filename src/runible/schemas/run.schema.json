@@ -3,6 +3,7 @@
   "properties": {
     "vars": { "$ref": "#/$defs/vars" },
     "env": { "$ref": "#/$defs/env" },
+    "tags": { "$ref": "#/$defs/tags" },
     "interface": {
       "type": "string",
       "default": "default",
@@ -17,6 +18,7 @@
             "run": {"type": "string"},
             "vars": { "$ref": "#/$defs/vars" },
             "env": { "$ref": "#/$defs/env" },
+            "tags": { "$ref": "#/$defs/tags" },
             "after": {
               "anyOf": [
                 {"type": "string"},
@@ -52,6 +54,15 @@
     "vars": {
       "type": "object",
       "additionalProperties": true
+    },
+    "tags": {
+      "anyOf": [
+        {"type": "string"},
+        {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      ]
     }
   }
 }
