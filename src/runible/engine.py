@@ -27,6 +27,7 @@ class Step:
         plan: Plan,
         env: dict | None = None,
         vars: dict | None = None,
+        tags: list | None = None,
         after: list | None = None,
         when: list | None = None,
         *args,
@@ -44,6 +45,11 @@ class Step:
             self.env = {}
         else:
             self.env = env
+
+        if tags is None:
+            self.tags = []
+        else:
+            self.tags = as_list(tags)
 
         if after is None:
             self.after = []
@@ -116,7 +122,13 @@ class Step:
         if cmdline is not None:
             invoke_kwargs["cmdline"] = cmdline
 
+        if self.tags is not None and len(self.tags) > 0:
+            tags = f"--tags {','.join(self.tags)}"
+            invoke_kwargs["cmdline"] = " ".join([invoke_kwargs.get("cmdline", ""), tags]).strip()
+
         self.start()
+        # TODO: Delete
+        print(f"INVOKE_KWARGS: {invoke_kwargs}")
         try:
             ansible_runner.interface.run(
                 quiet=self.get_interface().quiet, **invoke_kwargs
@@ -147,6 +159,7 @@ class Plan:
         self,
         env: dict | None = None,
         vars: dict | None = None,
+        tags: list | None = None,
         steps: dict | None = None,
         interface: str = "default",
         context: Path | None = None,
@@ -162,6 +175,11 @@ class Plan:
             self.env = {}
         else:
             self.env = env
+
+        if tags is None:
+            self.tags = []
+        else:
+            self.tags = tags
 
         interface_class = self.get_interface_object(interface)
         self.interface = interface_class()
@@ -230,9 +248,19 @@ class Plan:
             if step_env:
                 merged_env.update(step_env)
 
+            # Merge plan-level tags with step tags (plan tags are combined with step tags)
+            merged_tags = []
+            if self.tags:
+                merged_tags = [*merged_tags, *self.tags]
+
+            step_tags = step.get("tags")
+            if step_tags:
+                merged_tags = [*merged_tags, *step_tags]
+
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
+            step_copy["tags"] = merged_tags
             step_list.append(Step(name, plan=self, **step_copy))
 
         return step_list

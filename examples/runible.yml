@@ -6,6 +6,8 @@ vars:
 env:
   ANSIBLE_FORKS: 15
 
+tags:
+  - bar
 steps:
   step1:
     run: playbooks/playbook1.yml
@@ -17,6 +19,8 @@ steps:
     after:
       - step1
     run: playbooks/playbook2.yml
+    tags:
+      - foo
   step3:
     after:
       - step1
