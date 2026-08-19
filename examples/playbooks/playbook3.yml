@@ -3,3 +3,5 @@
   tasks:
     - debug:
         msg: Hello from playbook3.yml
+      tags:
+        - pb3
