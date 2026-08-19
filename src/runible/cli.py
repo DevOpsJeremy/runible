@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import click
+import shlex
 
 from .engine import Graph, Step, Workflow
 
@@ -17,4 +18,4 @@ def runible():
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
     ctx = click.get_current_context()
-    Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=" ".join(ctx.args))
+    Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=shlex.join(ctx.args))
