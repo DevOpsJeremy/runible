@@ -93,11 +93,7 @@ class Step:
     def end(self):
         self.signal("end")
 
-    def _invoke(
-        self,
-        cmdline=None,
-        *args, **kwargs
-    ):
+    def _invoke(self, cmdline=None, *args, **kwargs):
         invoke_kwargs = {
             "playbook": str(self.run),
             "event_handler": self.event_handler,

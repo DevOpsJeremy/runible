@@ -12,13 +12,9 @@ def runible():
 
 @runible.command(
     name="run",
-    context_settings={
-        "ignore_unknown_options": True,
-        "allow_extra_args": True
-    }
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
 )
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
     ctx = click.get_current_context()
-    Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=' '.join(ctx.args))
-
+    Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=" ".join(ctx.args))
