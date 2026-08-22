@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    ".venv",
+    ".venv*",
+    ".pytest_cache",
+    ".git",
+    "site"
+  ],
+  "files": [
+    "**/*.{py,md,txt,yml,yaml,rst}"
+  ],
+  "allowCompoundWords": true,
+  "words": [
+    "runible",
+    "extravars",
+    "initargs",
+    "capsys",
+    "jsonschema",
+    "networkx"
+  ]
+}

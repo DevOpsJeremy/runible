@@ -92,6 +92,18 @@ clean-build:
 	$(call CLEAN,$(BUILD_TRASH_FILES))
 
 TRASH_FILES ?= 
+
+spell-check-install:
+	$(HEADER)
+	npm install -g cspell
+
+pre-spell-check: spell-check-install
+
+spell-check: pre-spell-check
+	$(HEADER)
+	# Run the cspell CLI. Ensure cspell is installed (see `make spell-check-install`).
+	cspell
+
 clean: clean-lint clean-test clean-docs clean-build
 	$(HEADER)
 	$(call CLEAN,$(TRASH_FILES))
