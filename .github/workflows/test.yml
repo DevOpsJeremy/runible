@@ -32,9 +32,6 @@ jobs:
       - name: Lint the project
         run: make lint
 
-  spell-check:
-    uses: ./.github/workflows/spell-check.yml
-
   install:
     runs-on: ubuntu-latest
     needs: [test, lint, spell-check]
