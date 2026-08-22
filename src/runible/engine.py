@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -27,6 +28,8 @@ class Step:
         plan: Plan,
         env: dict | None = None,
         vars: dict | None = None,
+        tags: list | str | None = None,
+        skip_tags: list | str | None = None,
         after: list | None = None,
         when: list | None = None,
         *args,
@@ -44,6 +47,16 @@ class Step:
             self.env = {}
         else:
             self.env = env
+
+        if tags is None:
+            self.tags = []
+        else:
+            self.tags = as_list(tags)
+
+        if skip_tags is None:
+            self.skip_tags = []
+        else:
+            self.skip_tags = as_list(skip_tags)
 
         if after is None:
             self.after = []
@@ -116,6 +129,16 @@ class Step:
         if cmdline is not None:
             invoke_kwargs["cmdline"] = cmdline
 
+        if self.tags is not None and len(self.tags) > 0:
+            tags = f"--tags {shlex.quote(','.join(self.tags))}"
+            cmdline = invoke_kwargs.get("cmdline", "")
+            invoke_kwargs["cmdline"] = f"{cmdline} {tags}".strip()
+
+        if self.skip_tags is not None and len(self.skip_tags) > 0:
+            skip_tags = f"--skip-tags {shlex.quote(','.join(self.skip_tags))}"
+            cmdline = invoke_kwargs.get("cmdline", "")
+            invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
+
         self.start()
         try:
             ansible_runner.interface.run(
@@ -147,6 +170,8 @@ class Plan:
         self,
         env: dict | None = None,
         vars: dict | None = None,
+        tags: list | str | None = None,
+        skip_tags: list | str | None = None,
         steps: dict | None = None,
         interface: str = "default",
         context: Path | None = None,
@@ -162,6 +187,16 @@ class Plan:
             self.env = {}
         else:
             self.env = env
+
+        if tags is None:
+            self.tags = []
+        else:
+            self.tags = as_list(tags)
+
+        if skip_tags is None:
+            self.skip_tags = []
+        else:
+            self.skip_tags = as_list(skip_tags)
 
         interface_class = self.get_interface_object(interface)
         self.interface = interface_class()
@@ -230,9 +265,29 @@ class Plan:
             if step_env:
                 merged_env.update(step_env)
 
+            # Merge plan-level tags with step tags (plan tags are combined with step tags)
+            merged_tags = []
+            if self.tags:
+                merged_tags = [*self.tags]
+
+            step_tags = step.get("tags", None)
+            if step_tags is not None:
+                merged_tags = [*merged_tags, *as_list(step_tags)]
+
+            # Merge plan-level skip_tags with step skip_tags (plan skip_tags are combined with step skip_tags)
+            merged_skip_tags = []
+            if self.skip_tags:
+                merged_skip_tags = [*self.skip_tags]
+
+            step_skip_tags = step.get("skip_tags", None)
+            if step_skip_tags is not None:
+                merged_skip_tags = [*merged_skip_tags, *as_list(step_skip_tags)]
+
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
+            step_copy["tags"] = merged_tags
+            step_copy["skip_tags"] = merged_skip_tags
             step_list.append(Step(name, plan=self, **step_copy))
 
         return step_list
