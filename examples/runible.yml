@@ -8,6 +8,7 @@ env:
 
 tags:
   - pb1
+  - task1
   - pb2
   - pb3
 steps:
@@ -17,7 +18,6 @@ steps:
       var2: val2
     env:
       ANSIBLE_NOCOLOR: true
-    tags: task1
     skip_tags: task1
   step2:
     after:
