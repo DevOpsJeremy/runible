@@ -28,6 +28,7 @@ class Step:
         env: dict | None = None,
         vars: dict | None = None,
         tags: list | None = None,
+        skip_tags: list | None = None,
         after: list | None = None,
         when: list | None = None,
         *args,
@@ -50,6 +51,11 @@ class Step:
             self.tags = []
         else:
             self.tags = as_list(tags)
+
+        if skip_tags is None:
+            self.skip_tags = []
+        else:
+            self.skip_tags = as_list(skip_tags)
 
         if after is None:
             self.after = []
@@ -124,11 +130,15 @@ class Step:
 
         if self.tags is not None and len(self.tags) > 0:
             tags = f"--tags {','.join(self.tags)}"
-            invoke_kwargs["cmdline"] = " ".join([invoke_kwargs.get("cmdline", ""), tags]).strip()
+            cmdline = invoke_kwargs.get("cmdline", "")
+            invoke_kwargs["cmdline"] = " ".join([cmdline, tags]).strip()
+
+        if self.skip_tags is not None and len(self.skip_tags) > 0:
+            skip_tags = f"--skip-tags {','.join(self.tags)}"
+            cmdline = invoke_kwargs.get("cmdline", "")
+            invoke_kwargs["cmdline"] = " ".join([cmdline, skip_tags]).strip()
 
         self.start()
-        # TODO: Delete
-        print(f"INVOKE_KWARGS: {invoke_kwargs}")
         try:
             ansible_runner.interface.run(
                 quiet=self.get_interface().quiet, **invoke_kwargs
@@ -160,6 +170,7 @@ class Plan:
         env: dict | None = None,
         vars: dict | None = None,
         tags: list | None = None,
+        skip_tags: list | None = None,
         steps: dict | None = None,
         interface: str = "default",
         context: Path | None = None,
@@ -179,7 +190,12 @@ class Plan:
         if tags is None:
             self.tags = []
         else:
-            self.tags = tags
+            self.tags = as_list(tags)
+
+        if skip_tags is None:
+            self.skip_tags = []
+        else:
+            self.skip_tags = as_list(skip_tags)
 
         interface_class = self.get_interface_object(interface)
         self.interface = interface_class()
@@ -251,16 +267,26 @@ class Plan:
             # Merge plan-level tags with step tags (plan tags are combined with step tags)
             merged_tags = []
             if self.tags:
-                merged_tags = [*merged_tags, *self.tags]
+                merged_tags = [*self.tags]
 
-            step_tags = step.get("tags")
-            if step_tags:
-                merged_tags = [*merged_tags, *step_tags]
+            step_tags = step.get("tags", None)
+            if step_tags is not None:
+                merged_tags = [*merged_tags, *as_list(step_tags)]
 
+            # Merge plan-level skip_tags with step skip_tags (plan skip_tags are combined with step skip_tags)
+            merged_skip_tags = []
+            if self.skip_tags:
+                merged_skip_tags = [*self.skip_tags]
+
+            step_skip_tags = step.get("skip_tags", None)
+            if step_skip_tags is not None:
+                merged_skip_tags = [*merged_skip_tags, *as_list(step_skip_tags)]
+ 
             step_copy = dict(step)
             step_copy["vars"] = merged_vars
             step_copy["env"] = merged_env
             step_copy["tags"] = merged_tags
+            step_copy["skip_tags"] = merged_skip_tags
             step_list.append(Step(name, plan=self, **step_copy))
 
         return step_list

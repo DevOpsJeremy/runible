@@ -4,3 +4,5 @@
     - debug:
         var: '{{ item }}'
       loop: [var1, var2]
+      tags:
+        - task1

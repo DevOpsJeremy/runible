@@ -4,6 +4,7 @@
     "vars": { "$ref": "#/$defs/vars" },
     "env": { "$ref": "#/$defs/env" },
     "tags": { "$ref": "#/$defs/tags" },
+    "skip_tags": { "$ref": "#/$defs/tags" },
     "interface": {
       "type": "string",
       "default": "default",
@@ -19,6 +20,7 @@
             "vars": { "$ref": "#/$defs/vars" },
             "env": { "$ref": "#/$defs/env" },
             "tags": { "$ref": "#/$defs/tags" },
+            "skip_tags": { "$ref": "#/$defs/tags" },
             "after": {
               "anyOf": [
                 {"type": "string"},
