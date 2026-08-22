@@ -102,15 +102,23 @@ class Step:
         return self.plan.interface
 
     def start(self):
+        """Emit the ``start`` lifecycle signal for this step."""
         self.signal("start")
 
     def event_handler(self, event_data):
+        """Handle an event from ansible-runner and re-emit it as an ``event`` signal.
+
+        ``event_data`` is a dict payload forwarded to listeners.
+        """
         self.signal("event", **event_data)
 
     def cancel_callback(self):
+        """Emit a ``cancel`` signal to notify listeners the step was cancelled."""
         self.signal("cancel")
 
     def finished_callback(self, runner: ansible_runner.runner.Runner):
+        """Called when ansible-runner completes; emits a ``finished`` signal
+        including the ``runner`` instance."""
         self.signal("finished", runner=runner)
 
     def status_handler(
@@ -118,12 +126,17 @@ class Step:
         status_data: dict,
         runner_config: ansible_runner.runner_config.RunnerConfig,
     ):
+        """Receive status updates from ansible-runner and forward them as a
+        ``status`` signal to listeners.
+        """
         self.signal("status", status_data=status_data, runner_config=runner_config)
 
     def artifacts_handler(self, artifact_dir: str):
+        """Notify listeners with the artifacts directory for a completed run."""
         self.signal("artifacts", artifact_dir=artifact_dir)
 
     def end(self):
+        """Emit the ``end`` lifecycle signal for this step."""
         self.signal("end")
 
     def _invoke(self, cmdline=None, *args, **kwargs):
@@ -169,9 +182,14 @@ class Step:
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
+        """Class-level entrypoint used by the workflow runner to invoke a step.
+
+        This method delegates to the instance ``_invoke`` implementation.
+        """
         step._invoke(*args, **kwargs)
 
     def signal(self, status: str, **kwargs):
+        """Send a blinker signal named ``status`` with any additional kwargs."""
         signal(status).send(self, **kwargs)
 
 
@@ -182,8 +200,8 @@ class Plan:
     ``env``, ``vars``, ``tags`` and ``skip_tags`` and produces a list of
     `Step` objects via :meth:`get_steps`.
 
-    Use :meth:`from_file` or :meth:`load_plan` to construct a Plan from a
-    YAML file. :meth:`validate_plan` enforces the JSON schema defined in
+    Use `from_file` or `load_plan` to construct a Plan from a
+    YAML file. `validate_plan` enforces the JSON schema defined in
     ``schemas/run.schema.json``.
     """
 
@@ -350,6 +368,7 @@ class Plan:
 
     @classmethod
     def load_plan(cls, file):
+        """Parse YAML from ``file`` and return the resulting mapping."""
         return yaml.safe_load(file)
 
     @classmethod
@@ -369,6 +388,11 @@ class Plan:
 
     @classmethod
     def clean_plan(cls, plan):
+        """Normalize plan fields.
+
+        Converts string-valued ``when`` and ``after`` entries into lists so
+        downstream code can always treat them uniformly as sequences.
+        """
         return_plan = plan.copy()
 
         for step_name, step in plan.get("steps", {}).items():
@@ -397,6 +421,7 @@ class Graph(nx.DiGraph):
 
     @classmethod
     def from_file(cls, file):
+        """Create a Graph from a plan file and build its dependencies."""
         graph = cls(Plan.from_file(file))
         graph.build()
         return graph
@@ -428,6 +453,13 @@ class Graph(nx.DiGraph):
 
 
 class Workflow:
+    """Executor for a step graph that runs ready nodes in a thread pool.
+
+    The :meth:`run` method schedules steps whose dependencies are satisfied and
+    executes the provided callable for each node. The callable receives node
+    data (including the ``step`` object) as keyword arguments.
+    """
+
     def __init__(self, graph: nx.DiGraph):
         self.graph = graph
 
@@ -441,6 +473,13 @@ class Workflow:
         *args,
         **kwargs,
     ):
+        """Execute the workflow.
+
+        ``fn`` is the callable invoked for each ready node. It receives the node
+        data (including the ``step`` object) as keyword arguments. The method
+        schedules work on a thread pool with up to ``max_workers`` threads and
+        respects dependencies defined in the graph.
+        """
         remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
         future_to_step = {}
