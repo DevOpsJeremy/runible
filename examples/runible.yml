@@ -17,7 +17,7 @@ steps:
     vars:
       var2: val2
     env:
-      ANSIBLE_NOCOLOR: true # spellchecker: ignore NOCOLOR
+      ANSIBLE_NOCOLOR: true
     skip_tags: task1
   step2:
     after:
