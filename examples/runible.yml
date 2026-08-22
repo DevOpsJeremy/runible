@@ -6,6 +6,11 @@ vars:
 env:
   ANSIBLE_FORKS: 15
 
+tags:
+  - pb1
+  - task1
+  - pb2
+  - pb3
 steps:
   step1:
     run: playbooks/playbook1.yml
@@ -13,10 +18,13 @@ steps:
       var2: val2
     env:
       ANSIBLE_NOCOLOR: true
+    skip_tags: task1
   step2:
     after:
       - step1
     run: playbooks/playbook2.yml
+    tags:
+      - foo
   step3:
     after:
       - step1
