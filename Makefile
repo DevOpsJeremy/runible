@@ -109,7 +109,6 @@ pre-spell-check: install-cspell
 
 spell-check: pre-spell-check
 	$(HEADER)
-	# Run the cspell CLI. Ensure cspell is installed (see `make spell-check-install`).
 	cspell
 
 TRASH_FILES ?= 
