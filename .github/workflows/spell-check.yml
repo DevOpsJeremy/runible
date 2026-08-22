@@ -1,6 +1,10 @@
 name: Spell check
 on:
-  workflow_call:
+  push:
+    paths:
+      - src/**
+      - docs/**
+      - zensical.toml
 
 jobs:
   spell-check:
