@@ -134,7 +134,7 @@ class Step:
             invoke_kwargs["cmdline"] = " ".join([cmdline, tags]).strip()
 
         if self.skip_tags is not None and len(self.skip_tags) > 0:
-            skip_tags = f"--skip-tags {','.join(self.tags)}"
+            skip_tags = f"--skip-tags {','.join(self.skip_tags)}"
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = " ".join([cmdline, skip_tags]).strip()
 
