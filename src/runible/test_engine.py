@@ -1,5 +1,6 @@
-from runible import engine
 import ansible_runner
+
+from runible import engine
 
 
 def test_workflow_run_order(tmp_path, capsys):

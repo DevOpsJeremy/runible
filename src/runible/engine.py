@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -129,12 +130,12 @@ class Step:
             invoke_kwargs["cmdline"] = cmdline
 
         if self.tags is not None and len(self.tags) > 0:
-            tags = f"--tags {','.join(self.tags)}"
+            tags = f"--tags {shlex.quote(','.join(self.tags))}"
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {tags}".strip()
 
         if self.skip_tags is not None and len(self.skip_tags) > 0:
-            skip_tags = f"--skip-tags {','.join(self.skip_tags)}"
+            skip_tags = f"--skip-tags {shlex.quote(','.join(self.skip_tags))}"
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
 
