@@ -15,7 +15,7 @@ classifiers = [
 
 readme = "README.md"
 license = "MIT"
-license-files = ["LICEN[CS]E*"]
+license-files = ["LICEN[CS]E*"] # spellchecker: ignore LICEN
 authors = [
   {name = "Jeremy Watkins", email = "DevOpsJeremy@gmail.com"}
 ]
