@@ -3,12 +3,7 @@ on:
   push:
     branches-ignore:
       - main
-    paths: &paths
-      - src/**
-      - docs/**
-      - zensical.toml
   pull_request:
-    paths: *paths
 
 jobs:
   spell-check:
