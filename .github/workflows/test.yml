@@ -1,15 +1,15 @@
-name: Test package
-run-name: 'Running tests: ${{ github.event.commits[0].message }}'
+name: Run tests
+run-name: Running tests
 on:
   push:
     branches-ignore:
       - main
-    paths: &workflow_paths
+    paths: &paths
       - src/**
       - pyproject.toml
       - requirements.txt
   pull_request:
-    paths: *workflow_paths
+    paths: *paths
 
 jobs:
   test:
