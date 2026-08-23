@@ -1,14 +1,15 @@
 name: Run tests
 run-name: Running tests
 on:
-  push: &on_rules
+  push:
     branches-ignore:
       - main
-    paths:
+    paths: &paths
       - src/**
       - pyproject.toml
       - requirements.txt
-  pull_request: *on_rules
+  pull_request:
+    paths: *paths
 
 jobs:
   test:
