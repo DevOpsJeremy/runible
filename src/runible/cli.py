@@ -18,5 +18,11 @@ def runible():
 )
 @click.argument("file", type=click.File("r"), envvar="RUNIBLE_RUN_FILE")
 def run(file):
+    """CLI command to execute a runible plan from a file.
+
+    ``file`` is an open file object pointing at a YAML plan. Extra CLI args are
+    forwarded to the underlying ansible-runner invocation via the ``cmdline``
+    parameter.
+    """
     ctx = click.get_current_context()
     Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=shlex.join(ctx.args))
