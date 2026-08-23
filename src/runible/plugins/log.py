@@ -5,7 +5,7 @@ from ..interface import Interface
 
 
 class LogInterface(Interface):
-    """The ``Log`` Runible interface logs each ouptut
+    """The ``Log`` Runible interface logs each output
     to the console with a timestamp and the associated step.
     """
 
@@ -14,7 +14,7 @@ class LogInterface(Interface):
 
         ``event_data`` contains the event payload forwarded from ansible-runner.
         On each event, this interface prints to stdout with a log format indicating
-        the datetime and which step triggered the event. The ouptut is in the following
+        the datetime and which step triggered the event. The output is in the following
         format:
 
         ``<datetime> : [RUNIBLE] [<step name>] <stdout>``
