@@ -1,13 +1,14 @@
 name: Spell check
 on:
-  push: &on_rules
+  push:
     branches-ignore:
       - main
-    paths:
+    paths: &paths
       - src/**
       - docs/**
       - zensical.toml
-  pull_request: *on_rules
+  pull_request:
+    paths: *paths
 
 jobs:
   spell-check:
