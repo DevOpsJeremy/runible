@@ -1,4 +1,5 @@
-.PHONY: install-build pre-build build install install-pytest pre-test test install-ruff pre-lint lint pre-format format docs-install docs-generate pre-docs docs install-cspell pre-spell-check spell-check clean all run
+.PHONY: install-build pre-build build install install-pytest pre-test test install-ruff pre-lint lint lint-fix fix pre-format format docs-install docs-generate pre-docs docs install-cspell pre-spell-check spell-check clean all run
+
 define HEADER
 	@printf "\n-----\n%s\n-----\n\n" "$@"
 endef
