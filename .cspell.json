@@ -1,0 +1,36 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    ".venv",
+    ".venv*",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".git",
+    "site"
+  ],
+  "files": [
+    "**/*.{py,md,txt,yml,yaml,rst,toml}"
+  ],
+  "allowCompoundWords": true,
+  "useGitignore": true,
+  "words": [
+    "runible",
+    "extravars",
+    "initargs",
+    "capsys",
+    "jsonschema",
+    "networkx",
+    "ANSIBLE_NOCOLOR",
+    "pytest",
+    "pycache",
+    "mkdocstrings",
+    "sdist",
+    "lucide",
+    "twemoji",
+    "inlinehilite",
+    "pygments"
+  ]
+}

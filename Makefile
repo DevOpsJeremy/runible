@@ -1,4 +1,5 @@
-.PHONY: pre-build build install pre-test test pre-lint lint pre-format format clean all run
+.PHONY: install-build pre-build build install install-pytest pre-test test install-ruff pre-lint lint lint-fix fix pre-format format docs-install docs-generate pre-docs docs install-cspell pre-spell-check spell-check clean all run
+
 define HEADER
 	@printf "\n-----\n%s\n-----\n\n" "$@"
 endef
@@ -10,9 +11,12 @@ endef
 CMD ?= runible
 RUNIBLE_RUN_FILE ?= examples/runible.yml
 
-pre-build:
+PYTHON_BUILD_VERSION ?= 1.5.0
+install-build:
 	$(HEADER)
-	pip install build
+	pip install build==$(PYTHON_BUILD_VERSION)
+
+pre-build: install-build
 
 build: pre-build
 	$(HEADER)
@@ -22,17 +26,21 @@ install:
 	$(HEADER)
 	pip install .
 
-install-ruff:
+PYTHON_PYTEST_VERSION ?= 9.1.1
+install-pytest:
 	$(HEADER)
-	pip install ruff
+	pip install pytest==$(PYTHON_PYTEST_VERSION)
 
-pre-test:
-	$(HEADER)
-	pip install pytest .
+pre-test: install install-pytest
 
 test: pre-test
 	$(HEADER)
 	pytest
+
+PYTHON_RUFF_VERSION ?= 0.16.4
+install-ruff:
+	$(HEADER)
+	pip install ruff==$(PYTHON_RUFF_VERSION)
 
 pre-lint: install-ruff
 
@@ -58,7 +66,9 @@ all: clean install test lint
 run: install
 	$(CMD) run $(RUNIBLE_RUN_FILE)
 
-DOCS_PACKAGES ?= zensical mkdocstrings-python
+PYTHON_ZENSICAL_VERSION ?= 0.0.57
+PYTHON_MKDOCSTRINGS_VERSION ?= 2.0.7
+DOCS_PACKAGES ?= zensical==$(PYTHON_ZENSICAL_VERSION) mkdocstrings-python==$(PYTHON_MKDOCSTRINGS_VERSION)
 docs-install: install
 	pip install $(DOCS_PACKAGES)
 
@@ -90,6 +100,17 @@ BUILD_TRASH_FILES ?= dist
 clean-build:
 	$(HEADER)
 	$(call CLEAN,$(BUILD_TRASH_FILES))
+
+NPM_CSPELL_VERSION ?= 10.1.0
+install-cspell:
+	$(HEADER)
+	npm install -g cspell@$(NPM_CSPELL_VERSION)
+
+pre-spell-check: install-cspell
+
+spell-check: pre-spell-check
+	$(HEADER)
+	cspell
 
 TRASH_FILES ?= 
 clean: clean-lint clean-test clean-docs clean-build
