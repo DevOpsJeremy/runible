@@ -19,7 +19,27 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 
 class Step:
-    """Represents a single step in a plan"""
+    """Represents a single step in a plan.
+
+    A ``Step`` wraps a playbook invocation and associated metadata.
+
+    Public attributes
+    - ``name``: logical name of the step
+    - ``run``: playbook path (or command) to execute
+    - ``plan``: parent ``Plan`` instance
+    - ``env``: dict of environment variables passed to the invocation
+    - ``vars``: dict of extra variables passed to Ansible
+    - ``tags``: list of tags included for this step
+    - ``skip_tags``: list of tags to skip for this step
+    - ``after``: list of step names this step depends on
+    - ``when``: list of condition expressions
+
+    Important methods
+    - ``_invoke``: perform the actual ansible invocation (internal)
+    - ``invoke``: class-level wrapper that calls ``_invoke``
+    - Signal helpers such as ``start``, ``event_handler``, ``finished_callback``
+      emit lifecycle events via blinker signals.
+    """
 
     def __init__(
         self,
@@ -82,15 +102,23 @@ class Step:
         return self.plan.interface
 
     def start(self):
+        """Emit the ``start`` lifecycle signal for this step."""
         self.signal("start")
 
     def event_handler(self, event_data):
+        """Handle an event from ansible-runner and re-emit it as an ``event`` signal.
+
+        ``event_data`` is a dict payload forwarded to listeners.
+        """
         self.signal("event", **event_data)
 
     def cancel_callback(self):
+        """Emit a ``cancel`` signal to notify listeners the step was cancelled."""
         self.signal("cancel")
 
     def finished_callback(self, runner: ansible_runner.runner.Runner):
+        """Called when ansible-runner completes; emits a ``finished`` signal
+        including the ``runner`` instance."""
         self.signal("finished", runner=runner)
 
     def status_handler(
@@ -98,12 +126,17 @@ class Step:
         status_data: dict,
         runner_config: ansible_runner.runner_config.RunnerConfig,
     ):
+        """Receive status updates from ansible-runner and forward them as a
+        ``status`` signal to listeners.
+        """
         self.signal("status", status_data=status_data, runner_config=runner_config)
 
     def artifacts_handler(self, artifact_dir: str):
+        """Notify listeners with the artifacts directory for a completed run."""
         self.signal("artifacts", artifact_dir=artifact_dir)
 
     def end(self):
+        """Emit the ``end`` lifecycle signal for this step."""
         self.signal("end")
 
     def _invoke(self, cmdline=None, *args, **kwargs):
@@ -149,15 +182,27 @@ class Step:
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
+        """Class-level entrypoint used by the workflow runner to invoke a step.
+
+        This method delegates to the instance ``_invoke`` implementation.
+        """
         step._invoke(*args, **kwargs)
 
     def signal(self, status: str, **kwargs):
+        """Send a blinker signal named ``status`` with any additional kwargs."""
         signal(status).send(self, **kwargs)
 
 
 class Plan:
-    """
-    Builds a run configuration instance
+    """Builds a run configuration instance from YAML data.
+
+    A ``Plan`` encapsulates top-level configuration such as global
+    ``env``, ``vars``, ``tags`` and ``skip_tags`` and produces a list of
+    ``Step`` objects via ``get_steps``.
+
+    Use ``from_file`` or ``load_plan`` to construct a Plan from a
+    YAML file. ``validate_plan`` enforces the JSON schema defined in
+    ``schemas/run.schema.json``.
     """
 
     SCHEMA_FILE = SCHEMA_DIR / "run.schema.json"
@@ -204,6 +249,12 @@ class Plan:
         self.steps = self.get_steps(steps)
 
     def get_interface_object(self, name: str):
+        """Locate and load an interface plugin by entry-point name.
+
+        Searches the ``entry_group`` for plugins named ``name`` and returns the
+        loaded class. Raises a ``click.UsageError`` if no plugin (or more
+        than one without a clear preference) is found, or if loading fails.
+        """
         eps = entry_points()
         if hasattr(eps, "select"):
             interface_plugins = [
@@ -241,6 +292,12 @@ class Plan:
             ) from e
 
     def get_steps(self, steps: dict):
+        """Turn the raw steps mapping from the plan into a list of ``Step``.
+
+        This merges plan-level ``vars``, ``env``, ``tags`` and ``skip_tags``
+        into each step's configuration so that step-level values override or
+        extend plan-level values.
+        """
         step_list = []
 
         if steps is None:
@@ -294,6 +351,11 @@ class Plan:
 
     @classmethod
     def from_file(cls, file):
+        """Load, validate, and normalize a plan from an open file object.
+
+        Returns an initialized ``Plan`` instance. The plan's ``context`` is
+        set to the file's directory if not explicitly provided in the YAML.
+        """
         plan = cls.load_plan(file)
         cls.validate_plan(plan)
         if (
@@ -306,10 +368,16 @@ class Plan:
 
     @classmethod
     def load_plan(cls, file):
+        """Parse YAML from ``file`` and return the resulting mapping."""
         return yaml.safe_load(file)
 
     @classmethod
     def validate_plan(cls, plan):
+        """Validate the plan mapping against the JSON schema.
+
+        Raises a ``click.UsageError`` on validation errors with a helpful
+        message indicating the failing path.
+        """
         try:
             jsonschema.validate(instance=plan, schema=cls.SCHEMA)
             return True
@@ -320,6 +388,11 @@ class Plan:
 
     @classmethod
     def clean_plan(cls, plan):
+        """Normalize plan fields.
+
+        Converts string-valued ``when`` and ``after`` entries into lists so
+        downstream code can always treat them uniformly as sequences.
+        """
         return_plan = plan.copy()
 
         for step_name, step in plan.get("steps", {}).items():
@@ -334,17 +407,31 @@ class Plan:
 
 
 class Graph(nx.DiGraph):
+    """Directed graph of steps built from a ``Plan``.
+
+    Nodes are step names and node data includes the ``Step`` object under
+    the ``'step'`` key. Construct via ``from_file`` which reads a plan and
+    populates the graph. ``build`` validates dependencies and detects
+    cycles.
+    """
+
     def __init__(self, config: Plan = None):
         super().__init__()
         self.config = config
 
     @classmethod
     def from_file(cls, file):
+        """Create a Graph from a plan file and build its dependencies."""
         graph = cls(Plan.from_file(file))
         graph.build()
         return graph
 
     def build(self):
+        """Populate nodes and edges from the configured ``Plan``.
+
+        Validates that every declared dependency exists and that the graph has
+        no cycles; raises on error.
+        """
         if self.config is None or not self.config.steps:
             raise click.UsageError("No steps found in configuration")
 
@@ -366,6 +453,13 @@ class Graph(nx.DiGraph):
 
 
 class Workflow:
+    """Executor for a step graph that runs ready nodes in a thread pool.
+
+    The ``run`` method schedules steps whose dependencies are satisfied and
+    executes the provided callable for each node. The callable receives node
+    data (including the ``step`` object) as keyword arguments.
+    """
+
     def __init__(self, graph: nx.DiGraph):
         self.graph = graph
 
@@ -379,6 +473,13 @@ class Workflow:
         *args,
         **kwargs,
     ):
+        """Execute the workflow.
+
+        ``fn`` is the callable invoked for each ready node. It receives the node
+        data (including the ``step`` object) as keyword arguments. The method
+        schedules work on a thread pool with up to ``max_workers`` threads and
+        respects dependencies defined in the graph.
+        """
         remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
         future_to_step = {}
