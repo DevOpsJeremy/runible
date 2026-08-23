@@ -108,9 +108,10 @@ install-cspell:
 
 pre-spell-check: install-cspell
 
+CSPELL_PATH ?= .
 spell-check: pre-spell-check
 	$(HEADER)
-	cspell
+	cspell $(CSPELL_PATH)
 
 TRASH_FILES ?= 
 clean: clean-lint clean-test clean-docs clean-build

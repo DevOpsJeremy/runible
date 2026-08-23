@@ -14,6 +14,7 @@
     "**/*.{py,md,txt,yml,yaml,rst}"
   ],
   "allowCompoundWords": true,
+  "useGitignore": true,
   "words": [
     "runible",
     "extravars",
@@ -21,6 +22,14 @@
     "capsys",
     "jsonschema",
     "networkx",
-    "ANSIBLE_NOCOLOR"
+    "ANSIBLE_NOCOLOR",
+    "pytest",
+    "pycache",
+    "mkdocstrings",
+    "sdist",
+    "lucide",
+    "twemoji",
+    "inlinehilite",
+    "pygments"
   ]
 }
