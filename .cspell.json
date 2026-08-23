@@ -7,11 +7,12 @@
     ".venv",
     ".venv*",
     ".pytest_cache",
+    ".ruff_cache",
     ".git",
     "site"
   ],
   "files": [
-    "**/*.{py,md,txt,yml,yaml,rst}"
+    "**/*.{py,md,txt,yml,yaml,rst,toml}"
   ],
   "allowCompoundWords": true,
   "useGitignore": true,
