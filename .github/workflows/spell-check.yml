@@ -1,6 +1,15 @@
 name: Spell check
 on:
   push:
+    branches-ignore:
+      - main
+    paths:
+      - src/**
+      - docs/**
+      - zensical.toml
+  pull_request:
+    branches-ignore:
+      - main
     paths:
       - src/**
       - docs/**

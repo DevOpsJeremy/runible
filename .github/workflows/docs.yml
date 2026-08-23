@@ -5,6 +5,11 @@ on:
       - src/**
       - docs/**
       - zensical.toml
+  pull_request:
+    paths:
+      - src/**
+      - docs/**
+      - zensical.toml
 permissions:
   contents: read
   pages: write
