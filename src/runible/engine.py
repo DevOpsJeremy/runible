@@ -21,12 +21,12 @@ SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 class Step:
     """Represents a single step in a plan.
 
-    A `Step` wraps a playbook invocation and associated metadata.
+    A ``Step`` wraps a playbook invocation and associated metadata.
 
     Public attributes
     - ``name``: logical name of the step
     - ``run``: playbook path (or command) to execute
-    - ``plan``: parent `Plan` instance
+    - ``plan``: parent ``Plan`` instance
     - ``env``: dict of environment variables passed to the invocation
     - ``vars``: dict of extra variables passed to Ansible
     - ``tags``: list of tags included for this step
@@ -196,12 +196,12 @@ class Step:
 class Plan:
     """Builds a run configuration instance from YAML data.
 
-    A `Plan` encapsulates top-level configuration such as global
+    A ``Plan`` encapsulates top-level configuration such as global
     ``env``, ``vars``, ``tags`` and ``skip_tags`` and produces a list of
-    `Step` objects via :meth:`get_steps`.
+    ``Step`` objects via ``get_steps``.
 
-    Use `from_file` or `load_plan` to construct a Plan from a
-    YAML file. `validate_plan` enforces the JSON schema defined in
+    Use ``from_file`` or ``load_plan`` to construct a Plan from a
+    YAML file. ``validate_plan`` enforces the JSON schema defined in
     ``schemas/run.schema.json``.
     """
 
@@ -252,7 +252,7 @@ class Plan:
         """Locate and load an interface plugin by entry-point name.
 
         Searches the ``entry_group`` for plugins named ``name`` and returns the
-        loaded class. Raises a `click.UsageError` if no plugin (or more
+        loaded class. Raises a ``click.UsageError`` if no plugin (or more
         than one without a clear preference) is found, or if loading fails.
         """
         eps = entry_points()
@@ -292,7 +292,7 @@ class Plan:
             ) from e
 
     def get_steps(self, steps: dict):
-        """Turn the raw steps mapping from the plan into a list of `Step`.
+        """Turn the raw steps mapping from the plan into a list of ``Step``.
 
         This merges plan-level ``vars``, ``env``, ``tags`` and ``skip_tags``
         into each step's configuration so that step-level values override or
@@ -353,7 +353,7 @@ class Plan:
     def from_file(cls, file):
         """Load, validate, and normalize a plan from an open file object.
 
-        Returns an initialized `Plan` instance. The plan's ``context`` is
+        Returns an initialized ``Plan`` instance. The plan's ``context`` is
         set to the file's directory if not explicitly provided in the YAML.
         """
         plan = cls.load_plan(file)
@@ -375,7 +375,7 @@ class Plan:
     def validate_plan(cls, plan):
         """Validate the plan mapping against the JSON schema.
 
-        Raises a `click.UsageError` on validation errors with a helpful
+        Raises a ``click.UsageError`` on validation errors with a helpful
         message indicating the failing path.
         """
         try:
@@ -407,11 +407,11 @@ class Plan:
 
 
 class Graph(nx.DiGraph):
-    """Directed graph of steps built from a `Plan`.
+    """Directed graph of steps built from a ``Plan``.
 
-    Nodes are step names and node data includes the `Step` object under
-    the ``'step'`` key. Construct via :meth:`from_file` which reads a plan and
-    populates the graph. :meth:`build` validates dependencies and detects
+    Nodes are step names and node data includes the ``Step`` object under
+    the ``'step'`` key. Construct via ``from_file`` which reads a plan and
+    populates the graph. ``build`` validates dependencies and detects
     cycles.
     """
 
@@ -427,7 +427,7 @@ class Graph(nx.DiGraph):
         return graph
 
     def build(self):
-        """Populate nodes and edges from the configured `Plan`.
+        """Populate nodes and edges from the configured ``Plan``.
 
         Validates that every declared dependency exists and that the graph has
         no cycles; raises on error.
@@ -455,7 +455,7 @@ class Graph(nx.DiGraph):
 class Workflow:
     """Executor for a step graph that runs ready nodes in a thread pool.
 
-    The :meth:`run` method schedules steps whose dependencies are satisfied and
+    The ``run`` method schedules steps whose dependencies are satisfied and
     executes the provided callable for each node. The callable receives node
     data (including the ``step`` object) as keyword arguments.
     """

@@ -26,7 +26,7 @@ class Interface:
     def start(self, sender: Step):
         """Handle the ``start`` signal for a step.
 
-        ``sender`` is the `Step` instance that emitted the signal.
+        ``sender`` is the ``Step`` instance that emitted the signal.
         This is the default ``start`` method from the ``Interface`` class.
         Override in subclasses to provide the behavior when the callback is triggered.
         """

@@ -5,7 +5,7 @@ from ..interface import Interface
 
 
 class LogInterface(Interface):
-    """The ``Log`` Runible interface logs each output
+    """The ``log`` Runible interface logs each output
     to the console with a timestamp and the associated step.
     """
 
