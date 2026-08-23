@@ -1,11 +1,12 @@
 name: Documentation
 on:
-  push: &on_rules
-    paths:
+  push:
+    paths: &paths
       - src/**
       - docs/**
       - zensical.toml
-  pull_request: *on_rules
+  pull_request:
+    paths: *paths
 permissions:
   contents: read
   pages: write
