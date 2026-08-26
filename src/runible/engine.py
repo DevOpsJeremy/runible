@@ -451,7 +451,6 @@ class Graph(nx.DiGraph):
         if not nx.is_directed_acyclic_graph(self):
             raise ValueError("Graph contains one or more dependency cycles")
 
-
 class Workflow:
     """Executor for a step graph that runs ready nodes in a thread pool.
 
@@ -506,4 +505,12 @@ class Workflow:
                     if remaining[node] == 0:
                         node_data = self.graph.nodes[node]
                         f = executor.submit(fn, *args, **kwargs, **node_data)
-                        future_to_step[f] = node
+ 
+class Step2:
+
+class Workflow2:
+    def __init__(self, graph: nx.DiGraph):
+        self.graph = graph
+
+
+                       future_to_step[f] = node
