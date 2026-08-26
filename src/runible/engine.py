@@ -139,7 +139,9 @@ class Step:
         """Emit the ``end`` lifecycle signal for this step."""
         self.signal("end")
 
-    def _invoke(self, cmdline=None, *args, **kwargs):
+    def _invoke(
+        self, cmdline: str | None = None, run_async: bool = False, *args, **kwargs
+    ):
         invoke_kwargs = {
             "playbook": str(self.run),
             "event_handler": self.event_handler,
@@ -172,11 +174,14 @@ class Step:
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
 
+        invoke_kwargs["quiet"] = self.get_interface().quiet
+
+        if run_async:
+            return ansible_runner.interface.run_async(**invoke_kwargs)
+
         self.start()
         try:
-            ansible_runner.interface.run(
-                quiet=self.get_interface().quiet, **invoke_kwargs
-            )
+            return ansible_runner.interface.run(**invoke_kwargs)
         finally:
             self.end()
 
