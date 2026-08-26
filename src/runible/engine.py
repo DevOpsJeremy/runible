@@ -5,6 +5,7 @@ import shlex
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from importlib.metadata import entry_points
 from pathlib import Path
+from threading import Thread
 
 import ansible_runner
 import click
@@ -141,7 +142,7 @@ class Step:
 
     def _invoke(
         self, cmdline: str | None = None, run_async: bool = False, *args, **kwargs
-    ):
+    ) -> ansible_runner.runner.Runner | tuple[Thread, ansible_runner.runner.Runner]:
         invoke_kwargs = {
             "playbook": str(self.run),
             "event_handler": self.event_handler,
