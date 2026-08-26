@@ -139,7 +139,7 @@ class Step:
         """Emit the ``end`` lifecycle signal for this step."""
         self.signal("end")
 
-    def _invoke(self, cmdline=None, *args, **kwargs):
+    def _invoke(self, cmdline=None, async=False, *args, **kwargs):
         invoke_kwargs = {
             "playbook": str(self.run),
             "event_handler": self.event_handler,
@@ -172,13 +172,16 @@ class Step:
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
 
-        self.start()
-        try:
-            ansible_runner.interface.run(
-                quiet=self.get_interface().quiet, **invoke_kwargs
-            )
-        finally:
-            self.end()
+        invoke_kwargs["quiet"] = self.get_interface().quiet
+
+        if async:
+            ansible_runner.interface.run_async(**invoke_kwargs)
+        else:
+            self.start()
+            try:
+                ansible_runner.interface.run(**invoke_kwargs)
+            finally:
+                self.end()
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -505,12 +508,18 @@ class Workflow:
                     if remaining[node] == 0:
                         node_data = self.graph.nodes[node]
                         f = executor.submit(fn, *args, **kwargs, **node_data)
- 
+                        future_to_step[f] = node
+
 class Step2:
+    pass
 
 class Workflow2:
     def __init__(self, graph: nx.DiGraph):
         self.graph = graph
 
+    def start(self):
+        self.node_degrees = {node: self.graph.in_degree(node) for node in self.graph.nodes}
+        for node in self.node_degrees:
+            if self.node_degrees[node] == 0:
+                self.graph.nodes[node]
 
-                       future_to_step[f] = node
