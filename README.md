@@ -56,4 +56,4 @@ This will run the `prepare.yml` playbook, followed by `routers.yml` and `servers
 
 HTML:
 
-&#9678;
+&#9678;&nsp;&#9472;
