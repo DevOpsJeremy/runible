@@ -47,3 +47,5 @@ To invoke the run:
 runible run configure_infra.yml
 ```
 
+This will run the `prepare.yml` playbook, followed by `routers.yml` and `servers.yml`. Once `servers.yml` is completed, the `desktops.yml` playbook runs.
+
