@@ -53,3 +53,7 @@ This will run the `prepare.yml` playbook, followed by `routers.yml` and `servers
 ◎───────┤
         ╰─◎────────◎ `desktops`
           `servers`
+
+HTML:
+
+&#9678;
