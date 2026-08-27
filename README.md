@@ -9,9 +9,7 @@ Install using pip:
 ```bash
 pip install runible
 ```
-```
 
-```
 ## Usage
 
 A **Run** is configured with a list of **Steps**. Each step runs an playbook, along with optional extra vars or tags.
