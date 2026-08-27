@@ -4,7 +4,7 @@ Ansible workflow orchestrator.
 
 ## Installation
 
-Install using pip:
+Install with pip:
 
 ```bash
 pip install runible
