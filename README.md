@@ -12,7 +12,7 @@ pip install runible
 
 ## Usage
 
-A **Run** is configured with a list of **Steps**. Each step runs an playbook, along with optional extra vars or tags.
+A **Run** is configured with a list of **Steps**. Each step runs a playbook, along with optional extra vars or tags.
 
 `configure_infra.yml`
 
