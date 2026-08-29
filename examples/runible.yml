@@ -38,5 +38,5 @@ steps:
       - step2
     run: playbooks/playbook4.yml
 
-interface: workflow
+interface: log
 

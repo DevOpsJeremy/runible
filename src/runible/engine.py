@@ -172,13 +172,14 @@ class Step:
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
 
-        self.start()
+        #self.start()
         try:
             ansible_runner.interface.run(
                 quiet=self.get_interface().quiet, **invoke_kwargs
             )
         finally:
-            self.end()
+            #self.end()
+            pass
 
     @classmethod
     def invoke(cls, step: Step, *args, **kwargs):
@@ -186,7 +187,9 @@ class Step:
 
         This method delegates to the instance ``_invoke`` implementation.
         """
+        signal("start").send()
         step._invoke(*args, **kwargs)
+        signal("end").send()
 
     def signal(self, status: str, **kwargs):
         """Send a blinker signal named ``status`` with any additional kwargs."""

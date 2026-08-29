@@ -25,4 +25,6 @@ def run(file):
     parameter.
     """
     ctx = click.get_current_context()
-    Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=shlex.join(ctx.args))
+    from .plugins.workflow import WorkflowInterface
+    WorkflowInterface()
+    #Workflow(Graph.from_file(file)).run(fn=Step.invoke, cmdline=shlex.join(ctx.args))
