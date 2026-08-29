@@ -17,8 +17,8 @@
 </style>
 <div class="graph">
 <pre>
-   ╭─<p class="pending">●</p>
+   ╭─<p class="running">●</p>
 <p class="success">●</p>──┤
-   ╰─<p class="running">●</p>
+   ╰─<p class="running">●</p>──<p class="pending">●</p>
 </pre>
 </div>
