@@ -39,6 +39,7 @@ runible = "runible.cli:runible"
 [project.entry-points."runible"]
 default = "runible.plugins.default:DefaultInterface"
 log = "runible.plugins.log:LogInterface"
+workflow = "runible.plugins.workflow:WorkflowInterface"
 
 [tool.hatch.version]
 path = "src/runible/__init__.py"
