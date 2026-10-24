@@ -3,7 +3,7 @@ from enum import Enum
 import networkx as nx
 from rich.padding import Padding
 from rich.table import Table
-from textual.app import RenderResult
+from textual.app import App, RenderResult
 from textual.widgets import Static
 
 
