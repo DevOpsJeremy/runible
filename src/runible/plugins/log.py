@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ..engine import Step
+from ..engine import RunBase
 from ..interface import Interface
 
 
@@ -9,7 +9,7 @@ class LogInterface(Interface):
     to the console with a timestamp and the associated step.
     """
 
-    def event(self, sender: Step, **event_data):
+    def event(self, sender: RunBase, **event_data):
         """Handle an ``event`` emitted by the running playbook.
 
         ``event_data`` contains the event payload forwarded from ansible-runner.

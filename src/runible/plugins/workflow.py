@@ -133,3 +133,12 @@ class DAG(Static):
 
 # app = DAGApp()
 # app.run()
+
+from ..engine import Step
+from ..interface import Interface
+
+
+class WorkflowInterface(Interface):
+    def start(self, sender: Step):
+        app = DAGApp()
+

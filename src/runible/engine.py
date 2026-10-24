@@ -17,8 +17,12 @@ from .utilities import as_list
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
+class RunBase:
+    def signal(self, status: str, **kwargs):
+        """Send a blinker signal named ``status`` with any additional kwargs."""
+        signal(status).send(self, **kwargs)
 
-class Step:
+class Step(RunBase):
     """Represents a single step in a plan.
 
     A ``Step`` wraps a playbook invocation and associated metadata.
@@ -191,12 +195,8 @@ class Step:
         step._invoke(*args, **kwargs)
         signal("end").send()
 
-    def signal(self, status: str, **kwargs):
-        """Send a blinker signal named ``status`` with any additional kwargs."""
-        signal(status).send(self, **kwargs)
 
-
-class Plan:
+class Plan(RunBase):
     """Builds a run configuration instance from YAML data.
 
     A ``Plan`` encapsulates top-level configuration such as global
@@ -246,12 +246,12 @@ class Plan:
         else:
             self.skip_tags = as_list(skip_tags)
 
-        interface_class = self.get_interface_object(interface)
+        interface_class = self.load_interface(interface)
         self.interface = interface_class()
         self.context = context
         self.steps = self.get_steps(steps)
 
-    def get_interface_object(self, name: str):
+    def load_interface(self, name: str):
         """Locate and load an interface plugin by entry-point name.
 
         Searches the ``entry_group`` for plugins named ``name`` and returns the
@@ -455,7 +455,7 @@ class Graph(nx.DiGraph):
             raise ValueError("Graph contains one or more dependency cycles")
 
 
-class Workflow:
+class Workflow(RunBase):
     """Executor for a step graph that runs ready nodes in a thread pool.
 
     The ``run`` method schedules steps whose dependencies are satisfied and
@@ -483,6 +483,9 @@ class Workflow:
         schedules work on a thread pool with up to ``max_workers`` threads and
         respects dependencies defined in the graph.
         """
+
+        self.signal("initialize")
+
         remaining = {node: self.graph.in_degree(node) for node in self.graph.nodes}
 
         future_to_step = {}
@@ -510,3 +513,5 @@ class Workflow:
                         node_data = self.graph.nodes[node]
                         f = executor.submit(fn, *args, **kwargs, **node_data)
                         future_to_step[f] = node
+
+        self.signal("teardown")
