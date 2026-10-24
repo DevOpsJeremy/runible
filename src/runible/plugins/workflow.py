@@ -4,7 +4,7 @@ import networkx as nx
 from rich.padding import Padding
 from rich.table import Table
 from textual.app import App, RenderResult
-from textual.widgets import Static
+from textual.widgets import Static, Footer, Header
 
 
 class NodeStatus(Enum):
@@ -134,11 +134,12 @@ class DAG(Static):
 # app = DAGApp()
 # app.run()
 
-from ..engine import Step
+from ..engine import RunBase
 from ..interface import Interface
 
 
 class WorkflowInterface(Interface):
-    def start(self, sender: Step):
+    def initialize(self, sender: RunBase):
         app = DAGApp()
+        app.run()
 
