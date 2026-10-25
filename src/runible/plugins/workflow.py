@@ -6,6 +6,7 @@ from rich.table import Table
 from textual.app import App, RenderResult
 from textual.widgets import Static, Footer, Header
 
+import asyncio
 
 class NodeStatus(Enum):
     """Node execution status."""
@@ -137,9 +138,10 @@ class DAG(Static):
 from ..engine import RunBase
 from ..interface import Interface
 
-
 class WorkflowInterface(Interface):
     def initialize(self, sender: RunBase):
-        app = DAGApp()
-        app.run()
+        async def run_app():
+            app = DAGApp()
+            asyncio.create_task(app.run_async())
+        asyncio.run(run_app())
 

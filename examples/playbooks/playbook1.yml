@@ -1,8 +1,13 @@
 - hosts: localhost
   gather_facts: false
+  tags:
+    - pb1
   tasks:
     - debug:
         var: '{{ item }}'
       loop: [var1, var2]
       tags:
         - task1
+    - file:
+        path: /tmp/abc123
+        state: touch
