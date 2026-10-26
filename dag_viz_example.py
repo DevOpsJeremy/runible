@@ -7,7 +7,7 @@ This script demonstrates how to:
 3. Visualize them with Textualize
 """
 
-from dag_viz_textualize import SimpleDAG, NodeStatus, DAGApp
+from dag_viz_textualize import DAGApp, NodeStatus, SimpleDAG
 
 
 def example_ci_cd_pipeline():
@@ -114,9 +114,9 @@ def run_example(example_fn):
     """Run a single example."""
     dag, statuses, title = example_fn()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"📊 {title}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     app = DAGApp(dag, statuses)
     app.run()

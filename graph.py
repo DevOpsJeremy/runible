@@ -3,17 +3,20 @@ from textual.widget import Widget
 
 di_graph = nx.DiGraph()
 
-di_graph.add_edges_from([
-    ("checkout", "build"),
-    ("build", "test"),
-    ("build", "lint"),
-    ("test", "deploy"),
-    ("lint", "deploy"),
-])
+di_graph.add_edges_from(
+    [
+        ("checkout", "build"),
+        ("build", "test"),
+        ("build", "lint"),
+        ("test", "deploy"),
+        ("lint", "deploy"),
+    ]
+)
 
 di_graph.nodes["build"]["label"] = "Build"
 di_graph.nodes["build"]["status"] = "running"
 di_graph.nodes["build"]["duration"] = "42s"
+
 
 class Graph(Widget):
     DEFAULT_CSS = """
@@ -33,19 +36,10 @@ class Graph(Widget):
         "FAILED": "×",
         "CANCELED": "⊘",
     }
-    LINES: dict[str, tuple[str, str, str, str]] = { # https://en.wikipedia.org/wiki/Box_Drawing
-        "default": (
-            " ",
-            "│",
-            "└",
-            "├",
-            "┴",
-            "┼",
-            "╭",
-            "╰",
-            "╮",
-            "╯"
-        ),
+    LINES: dict[
+        str, tuple[str, str, str, str]
+    ] = {  # https://en.wikipedia.org/wiki/Box_Drawing
+        "default": (" ", "│", "└", "├", "┴", "┼", "╭", "╰", "╮", "╯"),
         "bold": (
             "  ",
             "┃ ",
@@ -59,18 +53,18 @@ class Graph(Widget):
             "╠═",
         ),
     }
-    def __init__(
-        self,
-        di_graph: nx.DiGraph
-    ):
+
+    def __init__(self, di_graph: nx.DiGraph):
         self.di_graph = di_graph
         super().__init__()
 
     def render(self):
         return f"{self.GLYPHS['PENDING']}"
 
+
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header
+
 
 class MyApp(App):
     def compose(self) -> ComposeResult:
@@ -78,6 +72,7 @@ class MyApp(App):
         graph_widget = Graph(di_graph)
         yield graph_widget
         yield Footer()
+
 
 if __name__ == "__main__":
     app = MyApp()

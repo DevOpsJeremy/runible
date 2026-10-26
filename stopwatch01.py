@@ -1,6 +1,7 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Tree
 from textual.binding import Binding
+from textual.widgets import Footer, Header, Tree
+
 
 class MyTree(Tree):
     BINDINGS = [
@@ -9,6 +10,7 @@ class MyTree(Tree):
         Binding("l", "cursor_right", "Cursor Right", priority=True, show=False),
         Binding("h", "cursor_left", "Cursor Left", priority=True, show=False),
     ]
+
 
 class StopwatchApp(App):
     BINDINGS = [
@@ -31,6 +33,7 @@ class StopwatchApp(App):
         self.theme = (
             "textual-dark" if self.theme == "textual-light" else "textual-light"
         )
+
 
 if __name__ == "__main__":
     app = StopwatchApp()

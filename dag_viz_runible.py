@@ -5,20 +5,19 @@ This script demonstrates how to integrate the DAG visualization
 with a Runible workflow execution, showing real-time status updates.
 """
 
-from typing import Dict, List
-from pathlib import Path
-import json
-
-from dag_viz_textualize import SimpleDAG, NodeStatus
+from dag_viz_textualize import NodeStatus, SimpleDAG
 
 try:
     from dag_viz_textualize import DAGApp
+
     HAS_TEXTUAL = True
 except ImportError:
     HAS_TEXTUAL = False
 
 
-def load_runible_workflow(workflow_file: str) -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def load_runible_workflow(
+    workflow_file: str,
+) -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """
     Load a Runible workflow and create a DAG visualization.
 
@@ -63,7 +62,9 @@ def load_runible_workflow(workflow_file: str) -> tuple[SimpleDAG, Dict[str, Node
     return dag, statuses
 
 
-def create_workflow_dag_from_dict(workflow_dict: dict) -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def create_workflow_dag_from_dict(
+    workflow_dict: dict,
+) -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """
     Create a DAG from a workflow dictionary structure.
 
@@ -91,7 +92,9 @@ def create_workflow_dag_from_dict(workflow_dict: dict) -> tuple[SimpleDAG, Dict[
     return dag, statuses
 
 
-def create_ansible_playbook_dag(playbook_file: str) -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def create_ansible_playbook_dag(
+    playbook_file: str,
+) -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """
     Create a DAG from an Ansible playbook structure.
 
@@ -130,7 +133,7 @@ def create_ansible_playbook_dag(playbook_file: str) -> tuple[SimpleDAG, Dict[str
     return dag, statuses
 
 
-def example_simple_deployment_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def example_simple_deployment_dag() -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """Example: Simple deployment workflow."""
     workflow = {
         "name": "Deployment Pipeline",
@@ -145,7 +148,7 @@ def example_simple_deployment_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
             {"name": "Deploy to Staging", "depends_on": ["Push to Registry"]},
             {"name": "Smoke Tests", "depends_on": ["Deploy to Staging"]},
             {"name": "Deploy to Production", "depends_on": ["Smoke Tests"]},
-        ]
+        ],
     }
 
     dag, statuses = create_workflow_dag_from_dict(workflow)
@@ -159,7 +162,7 @@ def example_simple_deployment_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
     return dag, statuses
 
 
-def example_parallel_tasks_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def example_parallel_tasks_dag() -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """Example: Workflow with parallel execution."""
     workflow = {
         "name": "Parallel Testing",
@@ -169,11 +172,17 @@ def example_parallel_tasks_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
             {"name": "Frontend Tests", "depends_on": ["Setup"]},
             {"name": "E2E Tests", "depends_on": ["Setup"]},
             {"name": "Security Scan", "depends_on": ["Setup"]},
-            {"name": "Merge Results", "depends_on": [
-                "Backend Tests", "Frontend Tests", "E2E Tests", "Security Scan"
-            ]},
+            {
+                "name": "Merge Results",
+                "depends_on": [
+                    "Backend Tests",
+                    "Frontend Tests",
+                    "E2E Tests",
+                    "Security Scan",
+                ],
+            },
             {"name": "Deploy", "depends_on": ["Merge Results"]},
-        ]
+        ],
     }
 
     dag, statuses = create_workflow_dag_from_dict(workflow)
@@ -188,7 +197,7 @@ def example_parallel_tasks_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
     return dag, statuses
 
 
-def example_with_conditionals_dag() -> tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def example_with_conditionals_dag() -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """Example: Workflow with conditional tasks."""
     dag = SimpleDAG()
     statuses = {

@@ -1,3 +1,5 @@
+from queue import Queue
+
 from ansible_runner.runner import Runner
 from ansible_runner.runner_config import RunnerConfig
 from blinker import signal
@@ -10,7 +12,12 @@ class Interface:
 
     def __init__(self, quiet: bool = True):
         self.quiet = quiet
+        self.message_queue = Queue()
         self.register_listeners()
+
+    def queue_message(self, message_type: str, **data):
+        """Queue a message for the interface to handle."""
+        self.message_queue.put({"type": message_type, **data})
 
     def register_listeners(self):
         """Connects listener callbacks to specific signals"""
@@ -98,5 +105,3 @@ class Interface:
         This method is for handling cleanup once the Run is finished.
         Override in subclasses to provide the behavior when the callback is triggered.
         """
-
-

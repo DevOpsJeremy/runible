@@ -3,13 +3,13 @@ DAG Visualization using Textualize for beautiful terminal UI.
 Simple implementation without external DAG library dependencies.
 """
 
-from typing import Dict, Set, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
 
 class NodeStatus(Enum):
     """Node execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -20,18 +20,19 @@ class NodeStatus(Enum):
 @dataclass
 class DAGNode:
     """Represents a node in the DAG."""
+
     name: str
-    dependencies: List[str]
+    dependencies: list[str]
 
 
 class SimpleDAG:
     """Simple DAG implementation without networkx dependency."""
 
     def __init__(self):
-        self.nodes: Dict[str, DAGNode] = {}
-        self.edges: Dict[str, List[str]] = {}
+        self.nodes: dict[str, DAGNode] = {}
+        self.edges: dict[str, list[str]] = {}
 
-    def add_node(self, name: str, dependencies: List[str] | None = None) -> None:
+    def add_node(self, name: str, dependencies: list[str] | None = None) -> None:
         """Add a node to the DAG."""
         deps = dependencies or []
         self.nodes[name] = DAGNode(name, deps)
@@ -52,15 +53,15 @@ class SimpleDAG:
         # Update dependencies for to_node
         self.nodes[to_node].dependencies.append(from_node)
 
-    def get_root_nodes(self) -> List[str]:
+    def get_root_nodes(self) -> list[str]:
         """Get all nodes with no dependencies."""
         return [name for name, node in self.nodes.items() if not node.dependencies]
 
-    def get_successors(self, node: str) -> List[str]:
+    def get_successors(self, node: str) -> list[str]:
         """Get all nodes that depend on the given node."""
         return self.edges.get(node, [])
 
-    def get_all_nodes(self) -> List[str]:
+    def get_all_nodes(self) -> list[str]:
         """Get all node names."""
         return list(self.nodes.keys())
 
@@ -82,14 +83,15 @@ STATUS_SYMBOLS = {
 }
 
 try:
-    from textual.app import App, ComposeResult
-    from textual.widgets import Static, Header, Footer
-    from textual.containers import Vertical, Horizontal
-    from rich.text import Text
+    from io import StringIO
+
+    from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
-    from rich.console import Console
-    from io import StringIO
+    from rich.text import Text
+    from textual.app import App, ComposeResult
+    from textual.containers import Horizontal, Vertical
+    from textual.widgets import Footer, Header, Static
 
     class DAGRenderer(Static):
         """Widget to render a DAG as a horizontal pipeline."""
@@ -97,8 +99,8 @@ try:
         def __init__(
             self,
             dag: SimpleDAG,
-            node_statuses: Dict[str, NodeStatus] | None = None,
-            **kwargs
+            node_statuses: dict[str, NodeStatus] | None = None,
+            **kwargs,
         ):
             super().__init__(**kwargs)
             self.dag = dag
@@ -108,7 +110,7 @@ try:
                 if node not in self.node_statuses:
                     self.node_statuses[node] = NodeStatus.PENDING
 
-        def _calculate_stages(self) -> Dict[int, List[str]]:
+        def _calculate_stages(self) -> dict[int, list[str]]:
             """Calculate topological stages for horizontal layout."""
             stages = {}
             node_levels = {}
@@ -163,7 +165,11 @@ try:
                     # Distribute multiple nodes evenly
                     total_space = max_height - 1 if max_height > 1 else 1
                     for i, node in enumerate(nodes_in_stage):
-                        row_idx = round(i * total_space / (num_nodes - 1)) if num_nodes > 1 else 0
+                        row_idx = (
+                            round(i * total_space / (num_nodes - 1))
+                            if num_nodes > 1
+                            else 0
+                        )
                         node_positions[(stage_idx, node)] = row_idx
 
             # Build grid: [row][column] where columns alternate between stage nodes and connectors
@@ -190,7 +196,9 @@ try:
                 next_nodes = stages[stage_idx + 1]
 
                 # Get positions of current and next nodes
-                current_rows = set(node_positions[(stage_idx, n)] for n in current_nodes)
+                current_rows = set(
+                    node_positions[(stage_idx, n)] for n in current_nodes
+                )
                 next_rows = set(node_positions[(stage_idx + 1, n)] for n in next_nodes)
 
                 # Draw connectors
@@ -219,24 +227,38 @@ try:
                         min_next = min(next_rows)
                         max_next = max(next_rows)
 
-                        all_rows = set(range(min(min_curr, min_next), max(max_curr, max_next) + 1))
+                        all_rows = set(
+                            range(min(min_curr, min_next), max(max_curr, max_next) + 1)
+                        )
                         if row_idx in all_rows:
                             # Determine if we need T-junction or vertical
                             connects_current = any(
-                                curr_row == row_idx or
-                                (min(curr_row, row_idx) < row_idx < max(curr_row, row_idx) and
-                                 min_curr <= row_idx <= max_curr)
+                                curr_row == row_idx
+                                or (
+                                    min(curr_row, row_idx)
+                                    < row_idx
+                                    < max(curr_row, row_idx)
+                                    and min_curr <= row_idx <= max_curr
+                                )
                                 for curr_row in current_rows
                             )
                             connects_next = any(
-                                next_row == row_idx or
-                                (min(next_row, row_idx) < row_idx < max(next_row, row_idx) and
-                                 min_next <= row_idx <= max_next)
+                                next_row == row_idx
+                                or (
+                                    min(next_row, row_idx)
+                                    < row_idx
+                                    < max(next_row, row_idx)
+                                    and min_next <= row_idx <= max_next
+                                )
                                 for next_row in next_rows
                             )
 
-                            if (min_curr <= row_idx <= max_curr) or (min_next <= row_idx <= max_next):
-                                grid[row_idx][connector_col] = Text("│", style="dim cyan")
+                            if (min_curr <= row_idx <= max_curr) or (
+                                min_next <= row_idx <= max_next
+                            ):
+                                grid[row_idx][connector_col] = Text(
+                                    "│", style="dim cyan"
+                                )
 
             # Convert grid to text
             lines = []
@@ -262,13 +284,15 @@ try:
     class DAGStatusTable(Static):
         """Widget to display node statuses in a table."""
 
-        def __init__(self, node_statuses: Dict[str, NodeStatus], **kwargs):
+        def __init__(self, node_statuses: dict[str, NodeStatus], **kwargs):
             super().__init__(**kwargs)
             self.node_statuses = node_statuses
 
         def render(self) -> Panel:
             """Render the status table."""
-            table = Table(title="Node Status", show_header=True, header_style="bold magenta")
+            table = Table(
+                title="Node Status", show_header=True, header_style="bold magenta"
+            )
             table.add_column("Node", style="cyan")
             table.add_column("Status", style="magenta")
             table.add_column("Symbol", justify="center")
@@ -282,7 +306,9 @@ try:
                     Text(symbol, style=f"bold {color}"),
                 )
 
-            return Panel(table, title="[bold green]Status Overview[/bold green]", expand=True)
+            return Panel(
+                table, title="[bold green]Status Overview[/bold green]", expand=True
+            )
 
     class DAGApp(App):
         """Textualize app for DAG visualization."""
@@ -316,7 +342,9 @@ try:
             ("r", "refresh", "Refresh"),
         ]
 
-        def __init__(self, dag: SimpleDAG, node_statuses: Dict[str, NodeStatus] | None = None):
+        def __init__(
+            self, dag: SimpleDAG, node_statuses: dict[str, NodeStatus] | None = None
+        ):
             super().__init__()
             self.dag = dag
             self.initial_statuses = node_statuses or {}
@@ -344,7 +372,7 @@ except ImportError:
     print("⚠️  Textual not available. Install with: python -m pip install textual")
 
 
-def create_example_dag() -> Tuple[SimpleDAG, Dict[str, NodeStatus]]:
+def create_example_dag() -> tuple[SimpleDAG, dict[str, NodeStatus]]:
     """Create an example DAG."""
     dag = SimpleDAG()
 

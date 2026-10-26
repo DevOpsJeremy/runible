@@ -144,6 +144,7 @@ app.run()
 
 # Or use text rendering
 from dag_viz_demo import render_pipeline_text
+
 print(render_pipeline_text(dag, statuses))
 ```
 

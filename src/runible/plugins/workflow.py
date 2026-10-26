@@ -1,12 +1,13 @@
+import asyncio
 from enum import Enum
 
 import networkx as nx
 from rich.padding import Padding
 from rich.table import Table
-from textual.app import App, RenderResult
-from textual.widgets import Static, Footer, Header
+from textual.app import App, RenderResult, ComposeResult
+from textual.widgets import Footer, Header, Static
 
-import asyncio
+import queue
 
 class NodeStatus(Enum):
     """Node execution status."""
@@ -34,7 +35,22 @@ STATUS_SYMBOLS = {
     NodeStatus.SKIPPED: "⊘",
 }
 
+
 class DAGApp(App):
+    def __init__(self, message_queue: queue.Queue = None):
+        super().__init__()
+        self.message_queue = message_queue
+
+    def on_mount(self):
+        self.set_interval(0.1, self._process_messages)
+
+    def _process_message(self):
+        try:
+            while True:
+                msg = self.message_queue.get_nowait()
+        except queue.Empty:
+            pass
+
     def new_digraph(self):
         dg = nx.DiGraph()
         dg.add_node("node_a", status=NodeStatus.SUCCESS)
@@ -132,16 +148,12 @@ class DAG(Static):
             table.add_row(*row_cells)
         return table
 
-# app = DAGApp()
-# app.run()
 
 from ..engine import RunBase
 from ..interface import Interface
 
+
 class WorkflowInterface(Interface):
     def initialize(self, sender: RunBase):
-        async def run_app():
-            app = DAGApp()
-            asyncio.create_task(app.run_async())
-        asyncio.run(run_app())
-
+        self.app = DAGApp(message_queue=self.message_queue)
+        asyncio.create_task(self.app.run_async())

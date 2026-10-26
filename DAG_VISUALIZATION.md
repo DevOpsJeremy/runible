@@ -180,9 +180,8 @@ from textual.widgets import Footer, Header
 from textual.containers import Vertical, Horizontal
 import asyncio
 
-from dag_viz_textualize import (
-    SimpleDAG, NodeStatus, DAGRenderer, DAGStatusTable
-)
+from dag_viz_textualize import SimpleDAG, NodeStatus, DAGRenderer, DAGStatusTable
+
 
 class DynamicDAGApp(App):
     def compose(self) -> ComposeResult:
@@ -246,6 +245,7 @@ You can extend `SimpleDAG` to store additional node metadata:
 
 ```python
 from dag_viz_textualize import SimpleDAG
+
 
 class ExtendedDAG(SimpleDAG):
     def __init__(self):

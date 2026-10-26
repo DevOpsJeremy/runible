@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import shlex
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -17,10 +18,12 @@ from .utilities import as_list
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
+
 class RunBase:
     def signal(self, status: str, **kwargs):
         """Send a blinker signal named ``status`` with any additional kwargs."""
         signal(status).send(self, **kwargs)
+
 
 class Step(RunBase):
     """Represents a single step in a plan.
@@ -176,13 +179,13 @@ class Step(RunBase):
             cmdline = invoke_kwargs.get("cmdline", "")
             invoke_kwargs["cmdline"] = f"{cmdline} {skip_tags}".strip()
 
-        #self.start()
+        # self.start()
         try:
             ansible_runner.interface.run(
                 quiet=self.get_interface().quiet, **invoke_kwargs
             )
         finally:
-            #self.end()
+            # self.end()
             pass
 
     @classmethod
@@ -467,6 +470,28 @@ class Workflow(RunBase):
         self.graph = graph
 
     def run(
+        self,
+        fn,
+        include_data: bool = True,
+        max_workers: int = 5,
+        thread_pool_initializer=None,
+        thread_pool_initargs=(),
+        *args,
+        **kwargs,
+    ):
+        asyncio.run(
+            self._run_async(
+                fn,
+                include_data,
+                max_workers,
+                thread_pool_initializer,
+                thread_pool_initargs,
+                *args,
+                **kwargs,
+            )
+        )
+
+    def _run_async(
         self,
         fn,
         include_data: bool = True,

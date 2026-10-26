@@ -157,6 +157,7 @@ STATUS_COLORS[NodeStatus.RUNNING] = "cyan"
 ```python
 from dag_viz_textualize import SimpleDAG
 
+
 class CustomDAG(SimpleDAG):
     def __init__(self):
         super().__init__()

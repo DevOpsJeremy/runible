@@ -111,9 +111,9 @@ Use colored variants for status indication:
 ```python
 from spinner import BLUE_PULSE, RED_PULSE, GREEN_PULSE, YELLOW_PULSE
 
-BLUE_PULSE(duration=2.0)    # Blue circle
-RED_PULSE(duration=2.0)     # Red circle (error)
-GREEN_PULSE(duration=2.0)   # Green circle (success)
+BLUE_PULSE(duration=2.0)  # Blue circle
+RED_PULSE(duration=2.0)  # Red circle (error)
+GREEN_PULSE(duration=2.0)  # Green circle (success)
 YELLOW_PULSE(duration=2.0)  # Yellow circle (warning)
 ```
 
@@ -124,11 +124,7 @@ YELLOW_PULSE(duration=2.0)  # Yellow circle (warning)
 ```python
 from spinner import Spinner
 
-my_spinner = Spinner(
-    frames=["▏", "▎", "▍", "▌"],
-    delay=0.1,
-    text="Custom loading..."
-)
+my_spinner = Spinner(frames=["▏", "▎", "▍", "▌"], delay=0.1, text="Custom loading...")
 
 my_spinner(duration=3.0)
 ```
@@ -142,7 +138,7 @@ my_colored_spinner = ColorSpinner(
     frames=["◔", "◑", "◕", "●"],
     delay=0.15,
     text="Processing...",
-    color="35"  # Magenta
+    color="35",  # Magenta
 )
 
 my_colored_spinner(duration=3.0)
@@ -183,9 +179,11 @@ spinner = Spinner(frames=["◔", "◑", "◕", "●"], delay=0.1)
 # Simple animation
 spinner(duration=2.0)
 
+
 # With callback for custom handling
 def my_callback(frame, text):
     print(f"[{frame}] {text}")
+
 
 spinner.animate(duration=2.0, callback=my_callback)
 ```
@@ -238,16 +236,18 @@ print("Data loaded!")
 ```python
 from spinner import BRAILLE_DOTS
 
+
 def process_data():
     spinner = BRAILLE_DOTS
     for i in range(5):
         spinner.animate(duration=2.0)
-        print(f"Processed batch {i+1}")
+        print(f"Processed batch {i + 1}")
 ```
 
 ### Status-Based Spinner
 ```python
 from spinner import GREEN_PULSE, RED_PULSE, YELLOW_PULSE
+
 
 def long_operation():
     try:
@@ -266,13 +266,15 @@ def long_operation():
 from spinner import BLUE_PULSE
 import time
 
+
 class LoadingSpinner:
     def __enter__(self):
         self.spinner = BLUE_PULSE
         return self
-    
+
     def __exit__(self, *args):
         pass
+
 
 with LoadingSpinner():
     BLUE_PULSE(duration=3.0)
@@ -326,13 +328,14 @@ You can use spinners while rendering DAGs:
 from spinner import BLUE_PULSE
 from dag_viz_textualize import DAGApp, SimpleDAG, NodeStatus
 
+
 def render_with_loading():
     print("Building pipeline...")
     BLUE_PULSE(duration=2.0)
-    
+
     dag = SimpleDAG()
     # ... build your DAG ...
-    
+
     app = DAGApp(dag, {})
     app.run()
 ```

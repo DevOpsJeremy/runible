@@ -4,16 +4,16 @@ Spinner Library - Create animated loading spinners
 Multiple styles of spinners you can use in your projects.
 """
 
-import time
 import sys
-from typing import List, Optional
+import time
 from dataclasses import dataclass
 
 
 @dataclass
 class Spinner:
     """Simple spinner class."""
-    frames: List[str]
+
+    frames: list[str]
     delay: float = 0.1
     text: str = "Loading..."
 
@@ -49,79 +49,65 @@ class Spinner:
 
 # 1. Classic pulsing circle (blue inner to outer circle)
 PULSE_CIRCLE = Spinner(
-    frames=["◔", "◑", "◕", "●", "◕", "◑"],
-    delay=0.1,
-    text="Processing..."
+    frames=["◔", "◑", "◕", "●", "◕", "◑"], delay=0.1, text="Processing..."
 )
 
 # 2. Rotating circle with quarter fills
-ROTATING_CIRCLE = Spinner(
-    frames=["◐", "◓", "◑", "◒"],
-    delay=0.1,
-    text="Loading..."
-)
+ROTATING_CIRCLE = Spinner(frames=["◐", "◓", "◑", "◒"], delay=0.1, text="Loading...")
 
 # 3. Braille dots (smooth animated dots)
 BRAILLE_DOTS = Spinner(
     frames=["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
     delay=0.08,
-    text="Loading..."
+    text="Loading...",
 )
 
 # 4. Bar spinner
 BAR_SPINNER = Spinner(
     frames=["▏", "▎", "▍", "▌", "▋", "▊", "▉", "▊", "▋", "▌", "▍", "▎"],
     delay=0.1,
-    text="Running..."
+    text="Running...",
 )
 
 # 5. Growing circle
 GROWING_CIRCLE = Spinner(
     frames=["◯", "◐", "◓", "◑", "◒", "●", "◒", "◑", "◓", "◐"],
     delay=0.15,
-    text="Processing..."
+    text="Processing...",
 )
 
 # 6. Arrow spinner
 ARROW_SPINNER = Spinner(
-    frames=["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"],
-    delay=0.1,
-    text="Working..."
+    frames=["←", "↖", "↑", "↗", "→", "↘", "↓", "↙"], delay=0.1, text="Working..."
 )
 
 # 7. Dots growing and shrinking
 EXPANDING_DOTS = Spinner(
     frames=[".", "..", "...", "....", ".....", "....", "...", "..", "."],
     delay=0.1,
-    text="Thinking..."
+    text="Thinking...",
 )
 
 # 8. Triangle spinner
-TRIANGLE_SPINNER = Spinner(
-    frames=["◢", "◣", "◤", "◥"],
-    delay=0.1,
-    text="Processing..."
-)
+TRIANGLE_SPINNER = Spinner(frames=["◢", "◣", "◤", "◥"], delay=0.1, text="Processing...")
 
 # 9. Multiple dots at angles
-DOTS_ANGLES = Spinner(
-    frames=["⠁", "⠂", "⠄", "⠂"],
-    delay=0.15,
-    text="Loading..."
-)
+DOTS_ANGLES = Spinner(frames=["⠁", "⠂", "⠄", "⠂"], delay=0.15, text="Loading...")
 
 # 10. Block spinner
-BLOCK_SPINNER = Spinner(
-    frames=["▌", "█", "▄", "▀"],
-    delay=0.1,
-    text="Loading..."
-)
+BLOCK_SPINNER = Spinner(frames=["▌", "█", "▄", "▀"], delay=0.1, text="Loading...")
 
 
 class ColorSpinner(Spinner):
     """Spinner with color support."""
 
-    def __init__(self, frames: List[str], delay: float = 0.1, text: str = "Loading...", color: str = "34"):
+    def __init__(
+        self,
+        frames: list[str],
+        delay: float = 0.1,
+        text: str = "Loading...",
+        color: str = "34",
+    ):
         """
         Create a colored spinner.
 
@@ -157,28 +143,28 @@ BLUE_PULSE = ColorSpinner(
     frames=["◔", "◑", "◕", "●", "◕", "◑"],
     delay=0.1,
     text="Processing...",
-    color="34"  # Blue
+    color="34",  # Blue
 )
 
 RED_PULSE = ColorSpinner(
     frames=["◔", "◑", "◕", "●", "◕", "◑"],
     delay=0.1,
     text="Error processing...",
-    color="31"  # Red
+    color="31",  # Red
 )
 
 GREEN_PULSE = ColorSpinner(
     frames=["◔", "◑", "◕", "●", "◕", "◑"],
     delay=0.1,
     text="Success...",
-    color="32"  # Green
+    color="32",  # Green
 )
 
 YELLOW_PULSE = ColorSpinner(
     frames=["◔", "◑", "◕", "●", "◕", "◑"],
     delay=0.1,
     text="Warning...",
-    color="33"  # Yellow
+    color="33",  # Yellow
 )
 
 
@@ -200,13 +186,13 @@ if __name__ == "__main__":
         ("Green Pulse", GREEN_PULSE),
     ]
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SPINNER EXAMPLES")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     for name, spinner in spinners:
         print(f"{name}:")
         spinner(duration=2.0)
         print()
 
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")

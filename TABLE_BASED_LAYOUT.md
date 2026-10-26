@@ -184,8 +184,7 @@ python dag_viz_runible.py conditional
 ### Grid Initialization
 ```python
 grid_width = len(stages) * 2 - 1  # Stages + connectors
-grid = [[" " for _ in range(grid_width)] 
-        for _ in range(max_height)]
+grid = [[" " for _ in range(grid_width)] for _ in range(max_height)]
 ```
 
 ### Node Placement

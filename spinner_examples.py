@@ -10,6 +10,7 @@ Copy-paste these examples directly into your code!
 
 from spinner import BLUE_PULSE
 
+
 def example_basic():
     """The most popular spinner - blue circle that pulses."""
     print("Processing...")
@@ -23,13 +24,10 @@ def example_basic():
 
 from spinner import Spinner
 
+
 def example_custom():
     """Create your own spinner."""
-    my_spinner = Spinner(
-        frames=["◐", "◓", "◑", "◒"],
-        delay=0.1,
-        text="Loading..."
-    )
+    my_spinner = Spinner(frames=["◐", "◓", "◑", "◒"], delay=0.1, text="Loading...")
     my_spinner(duration=3.0)
 
 
@@ -37,7 +35,8 @@ def example_custom():
 # EXAMPLE 3: Colored Spinners for Status
 # ============================================================================
 
-from spinner import BLUE_PULSE, GREEN_PULSE, RED_PULSE, YELLOW_PULSE
+from spinner import GREEN_PULSE, RED_PULSE, YELLOW_PULSE
+
 
 def example_status():
     """Different colors for different statuses."""
@@ -58,12 +57,13 @@ def example_status():
 # EXAMPLE 4: Use in a Loop
 # ============================================================================
 
+
 def example_loop():
     """Animate during a long operation."""
     from spinner import BRAILLE_DOTS
-    
+
     for i in range(5):
-        print(f"\nBatch {i+1}/5:")
+        print(f"\nBatch {i + 1}/5:")
         BRAILLE_DOTS(duration=2.0)
 
 
@@ -71,17 +71,18 @@ def example_loop():
 # EXAMPLE 5: Different Spinner Styles
 # ============================================================================
 
+
 def example_all_styles():
     """Try all the different spinners."""
     from spinner import (
+        ARROW_SPINNER,
+        BAR_SPINNER,
+        BLOCK_SPINNER,
+        BRAILLE_DOTS,
+        GROWING_CIRCLE,
         PULSE_CIRCLE,
         ROTATING_CIRCLE,
-        BRAILLE_DOTS,
-        BAR_SPINNER,
-        GROWING_CIRCLE,
-        ARROW_SPINNER,
         TRIANGLE_SPINNER,
-        BLOCK_SPINNER,
     )
 
     spinners = [
@@ -107,13 +108,14 @@ def example_all_styles():
 
 from spinner import ColorSpinner
 
+
 def example_custom_color():
     """Create a spinner in any ANSI color."""
     magenta_spinner = ColorSpinner(
         frames=["◔", "◑", "◕", "●", "◕", "◑"],
         delay=0.1,
         text="Custom color...",
-        color="35"  # Magenta
+        color="35",  # Magenta
     )
     magenta_spinner(duration=3.0)
 
@@ -122,19 +124,16 @@ def example_custom_color():
 # EXAMPLE 7: With Callback (Advanced)
 # ============================================================================
 
+
 def example_callback():
     """Get callback for each animation frame."""
     from spinner import Spinner
-    
+
     def on_frame(frame, text):
         # Do something on each frame
         print(f"Frame: {frame}")
-    
-    spinner = Spinner(
-        frames=["◐", "◓", "◑", "◒"],
-        delay=0.2,
-        text="Custom callback..."
-    )
+
+    spinner = Spinner(frames=["◐", "◓", "◑", "◒"], delay=0.2, text="Custom callback...")
     spinner.animate(duration=2.0, callback=on_frame)
 
 
@@ -142,12 +141,13 @@ def example_callback():
 # EXAMPLE 8: Text Changing Spinner
 # ============================================================================
 
+
 def example_changing_text():
     """Spinner that changes text during animation."""
     from spinner import BLUE_PULSE
-    
+
     texts = ["Fetching...", "Processing...", "Saving...", "Done!"]
-    
+
     for text in texts:
         BLUE_PULSE(duration=1.0)
 
@@ -156,17 +156,18 @@ def example_changing_text():
 # EXAMPLE 9: Task Completion Sequence
 # ============================================================================
 
+
 def example_sequence():
     """Show progress through multiple tasks."""
-    from spinner import BLUE_PULSE, GREEN_PULSE, YELLOW_PULSE
-    
+    from spinner import BLUE_PULSE, GREEN_PULSE
+
     tasks = [
         ("Checking files", BLUE_PULSE),
         ("Validating", BLUE_PULSE),
         ("Compiling", BLUE_PULSE),
         ("Success!", GREEN_PULSE),
     ]
-    
+
     for task_name, spinner in tasks:
         print(f"\n{task_name}...")
         spinner(duration=1.5)
@@ -176,14 +177,16 @@ def example_sequence():
 # EXAMPLE 10: Spinner with Try/Except
 # ============================================================================
 
+
 def example_error_handling():
     """Show different spinners based on success/failure."""
     from spinner import GREEN_PULSE, RED_PULSE
-    
+
     try:
         print("Processing...")
         # Simulate work
         import random
+
         if random.random() > 0.5:
             raise ValueError("Something went wrong!")
         GREEN_PULSE(duration=2.0)
@@ -197,13 +200,14 @@ def example_error_handling():
 # EXAMPLE 11: Spinner as Progress Indicator
 # ============================================================================
 
+
 def example_progress():
     """Use spinner to show work is happening during a loop."""
     from spinner import BRAILLE_DOTS
-    
+
     total_items = 5
     for i in range(total_items):
-        print(f"\nProcessing item {i+1}/{total_items}...")
+        print(f"\nProcessing item {i + 1}/{total_items}...")
         BRAILLE_DOTS(duration=1.0)
     print("\nAll done!")
 
@@ -212,10 +216,11 @@ def example_progress():
 # EXAMPLE 12: Spinner with Print Statements
 # ============================================================================
 
+
 def example_with_logging():
     """Mix spinner with logging/print statements."""
     from spinner import BLUE_PULSE
-    
+
     steps = [
         "Initializing...",
         "Loading configuration...",
@@ -224,11 +229,11 @@ def example_with_logging():
         "Processing...",
         "Saving results...",
     ]
-    
+
     for step in steps:
         print(f"\n{step}")
         BLUE_PULSE(duration=1.0)
-    
+
     print("\nComplete!")
 
 
@@ -269,10 +274,10 @@ EXAMPLES:
 """
 
 if __name__ == "__main__":
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SPINNER EXAMPLES")
-    print("="*60)
-    
+    print("=" * 60)
+
     examples = [
         ("Basic", example_basic),
         ("Custom", example_custom),
@@ -280,12 +285,12 @@ if __name__ == "__main__":
         ("All Styles", example_all_styles),
         ("Custom Color", example_custom_color),
     ]
-    
+
     for name, func in examples[:2]:  # Run first 2 to keep it short
         print(f"\n\n📍 {name}")
-        print("-"*60)
+        print("-" * 60)
         func()
-    
-    print("\n" + "="*60)
+
+    print("\n" + "=" * 60)
     print("See spinner.py for all 12 spinners and SPINNER_GUIDE.md for details!")
-    print("="*60)
+    print("=" * 60)
