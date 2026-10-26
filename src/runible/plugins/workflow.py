@@ -1,13 +1,15 @@
-import asyncio
+import queue
 from enum import Enum
 
 import networkx as nx
 from rich.padding import Padding
 from rich.table import Table
-from textual.app import App, RenderResult, ComposeResult
+from textual.app import App, ComposeResult, RenderResult
 from textual.widgets import Footer, Header, Static
 
-import queue
+from ..engine import RunBase
+from ..interface import Interface
+
 
 class NodeStatus(Enum):
     """Node execution status."""
@@ -149,11 +151,11 @@ class DAG(Static):
         return table
 
 
-from ..engine import RunBase
-from ..interface import Interface
-
-
 class WorkflowInterface(Interface):
     def initialize(self, sender: RunBase):
         self.app = DAGApp(message_queue=self.message_queue)
-        asyncio.create_task(self.app.run_async())
+        self.app.run()
+
+
+if __name__ == "__main__":
+    WorkflowInterface().initialize(None)
