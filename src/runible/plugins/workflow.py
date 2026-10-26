@@ -3,9 +3,10 @@ from enum import Enum
 
 import networkx as nx
 from rich.padding import Padding
-from rich.table import Table
 from textual.app import App, ComposeResult, RenderResult
-from textual.widgets import Footer, Header, Static
+from textual.widgets import DataTable, Footer, Header
+from textual.containers import Container
+from textual.binding import Binding
 
 from ..engine import RunBase
 from ..interface import Interface
@@ -42,6 +43,7 @@ class DAGApp(App):
     def __init__(self, message_queue: queue.Queue = None):
         super().__init__()
         self.message_queue = message_queue
+        self.dag_widget = None
 
     def on_mount(self):
         self.set_interval(0.1, self._process_messages)
@@ -90,31 +92,58 @@ class DAGApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         dag = self.new_digraph()
-        yield DAG(digraph=dag)
+        self.dag_widget = DAGWidget(digraph=dag)
+        yield self.dag_widget
         yield Footer()
 
 
-class DAG(Static):
+class DAGWidget(Container):
     """Textualize widget for DAG visualization"""
 
     def __init__(self, digraph: nx.DiGraph):
         super().__init__()
         self.digraph = digraph
+        self.selected_node = None
 
-    def render(self) -> RenderResult:
-        return self.generate_table(self.digraph)
+    def compose(self) -> ComposeResult:
+        table = DataTable()
+        table.id = "dag_table"
+        yield table
 
-    def generate_table(self, dag: nx.DiGraph):
+    def on_mount(self):
+        table = self.query_one("#dag_table", DataTable)
+        self._populate_table(table)
+        table.focus()
+
+    def old_populate_table(self, table: DataTable):
+        table.add_column("Node", key="node")
+        table.add_column("Status", key="status")
+        table.add_column("Details", key="details")
+
+        for node, data in self.digraph.nodes(data=True):
+            status = data.get("status", NodeStatus.PENDING)
+            color = STATUS_COLORS.get(status, "white")
+            symbol = STATUS_SYMBOLS.get(status, "○")
+
+            table.add_row(
+                node,
+                f"[{color}]{symbol} {status.value}[/]",
+                f"Predecessors: {list(self.digraph.predecessors(node))}",
+            )
+
+    # def render(self) -> RenderResult:
+    #     return self.generate_table(self.digraph)
+
+    def _populate_table(self, table: DataTable):
         # topological layers (generations)
-        gens = list(nx.topological_generations(dag))
+        gens = list(nx.topological_generations(self.digraph))
         layers = [sorted(g) for g in gens]
         if not layers:
-            return Table.grid()
+            return
 
         # columns: layer columns separated by connector columns
         n_layers = len(layers)
         n_cols = n_layers * 2 - 1
-        table = Table.grid()
         for _ in range(n_cols):
             table.add_column("")
         max_rows = max(len(layer) for layer in layers)
@@ -127,7 +156,7 @@ class DAG(Static):
             col = li * 2
             for ri, node in enumerate(layer):
                 positions[node] = (col, ri)
-                status = dag.nodes[node].get("status", NodeStatus.PENDING)
+                status = self.digraph.nodes[node].get("status", NodeStatus.PENDING)
                 color = STATUS_COLORS.get(status, "white")
                 symbol = STATUS_SYMBOLS.get(status, "○")
                 # color the symbol; keep name at right
@@ -138,7 +167,7 @@ class DAG(Static):
         for generation in gens:
             all_predecessors = []
             for node in generation:
-                all_predecessors.extend(list(dag.predecessors(node)))
+                all_predecessors.extend(list(self.digraph.predecessors(node)))
             all_predecessors = list(set(all_predecessors))
 
         # add rows to table
